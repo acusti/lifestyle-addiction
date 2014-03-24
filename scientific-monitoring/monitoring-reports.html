@@ -10,72 +10,18 @@
 </style>
 </head>
 <body id="boot">
-<script type="text/javascript">
+<script src="zapi.js"></script>
+<script>
+(function() {
+	var // Set up params
+		zapi_params = {
+			collection: 'DAEMVE2B'
+		};
 
-	(function($) {
-		var // Zotero collection ID
-			zotero_collection = 'DAEMVE2B',
-			zotero_user       = '1562960',
-			// Number of enties to fetch
-			num_entries       = 20,
-			zotero_options    = 'format=atom&content=bib&style=modern-language-association-with-url&order=date&sort=desc&limit=' + num_entries,
-			feed_url          = 'https://api.zotero.org/users/' + zotero_user + '/collections/' + zotero_collection + '/items?' + zotero_options,
-			google_feed_url   = 'https://ajax.googleapis.com/ajax/services/feed/load?v=1.0&q=' + encodeURIComponent(feed_url) + '&num=' + num_entries,
-			// Careful with using selectors with the jQuery object; it will search the parent DOM, not this one
-			$body             = $(document.body),
-			fixTabHeight      = function() {
-				window.frameElement.height = $body.parent().height();
-			};
-
-		// Call Feed.load() to retrieve and output RSS feed
-		$.ajax({
-			url: google_feed_url,
-			dataType: 'jsonp',
-			success: function(resp) {
-				var // Structure of resp: resp.responseData.feed.entries[]
-					refs     = resp.responseData.feed.entries,
-					len      = refs.length,
-					i        = 0,
-					ref_html = '',
-					url_start,
-					url_end;
-
-				for (; i < len; i++) {
-					url_start = refs[i].content.lastIndexOf('&lt;');
-					url_end = -1;
-					if (url_start === -1) {
-						url_start = 0;
-					} else {
-						url_start += 4;
-					}
-					if (url_start) {
-						url_end = refs[i].content.lastIndexOf('&gt;');
-					}
-					if (url_end === -1) {
-						url_end = 0;
-					}
-					refs[i].link = refs[i].content.substring(url_start, url_end);
-					// Title
-					ref_html += '<h6>' + (refs[i].link ? '<a href="' + refs[i].link + '" target="_blank">' : '') + refs[i].title + (refs[i].link ? '</a>' : '') + '</h6>';
-					// If we extracted a URL, remove it from the citation
-					if (refs[i].link) {
-						// Adjustments to start and end are to strip extra spaces and periods (the last part is just the closing tags)
-						refs[i].content = refs[i].content.substr(0, url_start - 7) + refs[i].content.substr(url_end + 4);
-					}
-					ref_html += refs[i].content;
-				}
-				$body.append(ref_html);
-				// When this tab is selected, a resize is triggered; use that opportunity to fix the iframe height
-				// And then trigger the logic once right away for the default tab
-				$(window).one('resize', function() {
-					fixTabHeight();
-					$(parent.window).on('resize', fixTabHeight);
-				});
-				fixTabHeight();
-			}
-		});
-	})(window.parent.jQuery);
-
+	zotero_api.getReferences(zapi_params, function(content) {
+		document.body.innerHTML += content;
+	});
+})();
 </script>
 </body>
 </html>
