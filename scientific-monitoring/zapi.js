@@ -53,6 +53,7 @@
 							};
 						},
 						$entry,
+						$bib,
 						entry;
 
 					for (; i < len; i++) {
@@ -64,7 +65,10 @@
 						ref_html += '<h6>' + (entry.url ? '<a href="' + entry.url + '" target="_blank">' : '') + entry.title + (entry.url ? '</a>' : '') + '</h6>';
 
 						// ref_html += refs[i].content;
-						ref_html += $entry.find('subcontent').filter(filterByType('bib')).html();
+						$bib = $entry.find('subcontent').filter(filterByType('bib')).children('div');
+						if ($bib.length) {
+							ref_html += $bib[0].outerHTML;
+						}
 					}
 					callback(ref_html);
 					// When this tab is selected, a resize is triggered; use that opportunity to fix the iframe height
