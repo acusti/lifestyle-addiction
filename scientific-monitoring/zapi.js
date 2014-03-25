@@ -31,8 +31,19 @@
 				feed_url     = zapi.getFeedUrl(options),
 				// Careful with using selectors with the jQuery object; it will search the parent DOM, not this one
 				$body        = $(document.body),
+				$window      = $(window),
 				fixTabHeight = function() {
-					window.frameElement.height = $body.parent().height();
+					window.clearTimeout(tab_height_timeout);
+					tab_height_timeout = window.setTimeout(function() {
+						// Remove this event listener, adjust height, add back the listener
+						$window.off('resize.tabs');
+						// Set height with extra 50px
+						window.frameElement.height = $body.parent().height() + 50;
+						// Add back the listener
+						window.setTimeout(function() {
+							$window.on('resize.tabs', fixTabHeight);
+						}, 200);
+					}, 200);
 				},
 				tab_height_timeout;
 
@@ -73,22 +84,7 @@
 					callback(ref_html);
 					// When this tab is selected, a resize is triggered; use that opportunity to fix the iframe height
 					// And then trigger the logic once right away for the default tab
-					$(window).on('resize', function() {
-						// If tab height timeout is false, then the resize was triggered by this function and should be ignored
-						if (tab_height_timeout === false) {
-							tab_height_timeout = '';
-							return;
-						}
-						if (tab_height_timeout !== '') {
-							window.clearTimeout(tab_height_timeout);
-						}
-						// Set height too large, then correct it after the dust has settled
-						window.frameElement.height = $body.parent().height() + 150;
-						tab_height_timeout = window.setTimeout(function() {
-							window.frameElement.height = $body.parent().height() + 10;
-							tab_height_timeout = false;
-						}, 350);
-					}).trigger('resize');
+					$window.on('resize.tabs', fixTabHeight).trigger('resize.tabs');
 				}
 			});
 		}
