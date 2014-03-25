@@ -3,12 +3,11 @@
 
 	zapi = {
 		defaults: {
-			collection: '',
-			user: '1562960',
-			// Number of enties to fetch
-			num_entries: 20,
-			zotero_options: 'format=atom&content=json,bib&style=apa&order=date&sort=desc'
-			
+			collection     : '',
+			user           : '1562960',
+			// Number of entries to fetch
+			num_entries    : 20,
+			zotero_options : 'format=atom&content=json,bib&style=apa&order=date&sort=desc'
 		},
 		getFeedUrl: function(options) {
 			var // Merge options with defaults and build url
@@ -18,6 +17,9 @@
 			// Build the zotero api url
 			zapi_url += params.user + '/collections/' + params.collection + '/items?' + params.zotero_options + '&limit=' + params.num_entries;
 
+			if (params.start) {
+				zapi_url += '&start=' + params.start;
+			}
 			if (params.q) {
 				zapi_url += '&q=' + params.q + '&qmode=titleCreatorYear';
 			}
