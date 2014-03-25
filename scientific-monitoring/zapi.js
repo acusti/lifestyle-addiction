@@ -70,11 +70,19 @@
 					// When this tab is selected, a resize is triggered; use that opportunity to fix the iframe height
 					// And then trigger the logic once right away for the default tab
 					$(window).on('resize', function() {
-						window.clearTimeout(tab_height_timeout);
+						// If tab height timeout is false, then the resize was triggered by this function and should be ignored
+						if (tab_height_timeout === false) {
+							tab_height_timeout = '';
+							return;
+						}
+						if (tab_height_timeout !== '') {
+							window.clearTimeout(tab_height_timeout);
+						}
 						// Set height too large, then correct it after the dust has settled
 						window.frameElement.height = $body.parent().height() + 150;
 						tab_height_timeout = window.setTimeout(function() {
 							window.frameElement.height = $body.parent().height() + 10;
+							tab_height_timeout = false;
 						}, 350);
 					}).trigger('resize');
 				}
