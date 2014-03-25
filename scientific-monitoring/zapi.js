@@ -26,12 +26,13 @@
 		},
 		getReferences: function(options, callback) {
 			var // Get the google feed api url
-				feed_url = zapi.getFeedUrl(options),
+				feed_url     = zapi.getFeedUrl(options),
 				// Careful with using selectors with the jQuery object; it will search the parent DOM, not this one
 				$body        = $(document.body),
 				fixTabHeight = function() {
 					window.frameElement.height = $body.parent().height();
-				};
+				},
+				tab_height_timeout;
 
 			$.ajax({
 				url: feed_url,
@@ -67,7 +68,10 @@
 					// When this tab is selected, a resize is triggered; use that opportunity to fix the iframe height
 					// And then trigger the logic once right away for the default tab
 					$(window).on('resize', function() {
-						window.frameElement.height = $body.parent().height() + 20;
+						window.clearTimeout(tab_height_timeout);
+						tab_height_timeout = window.setTimeout(function() {
+							window.frameElement.height = $body.parent().height() + 10;
+						}, 200);
 					}).trigger('resize');
 				}
 			});
