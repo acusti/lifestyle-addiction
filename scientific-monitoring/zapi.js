@@ -71,9 +71,11 @@
 					// And then trigger the logic once right away for the default tab
 					$(window).on('resize', function() {
 						window.clearTimeout(tab_height_timeout);
+						// Set height too large, then correct it after the dust has settled
+						window.frameElement.height = $body.parent().height() + 150;
 						tab_height_timeout = window.setTimeout(function() {
 							window.frameElement.height = $body.parent().height() + 10;
-						}, 200);
+						}, 350);
 					}).trigger('resize');
 				}
 			});
