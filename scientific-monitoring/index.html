@@ -778,66 +778,7 @@ monitoring-books.html
     })();
 </script>
 </div>
-<div class="parbase secondary-navigation section">
 
-
-
-
-
-
-
-<div class="c-sidebar-menu c-secondary-navigation" id="secondary_navigation">
-
-<ul style='display:block;'><li class=''><a class='root ' href='/research/lifestyle-addiction.html'>Research Chair on Gambling</a><div class='arrow  root '><i></i></div><ul style='display:block;'><li class=''><a class='' href='/research/lifestyle-addiction/about.html'>About us</a></li><li class=''><a class='' href='/research/lifestyle-addiction/research.html'>Research</a><div class='arrow '><i></i></div><ul style='display:none;'><li class=''><a class='' href='/research/lifestyle-addiction/research/people.html'>People</a></li><li class=''><a class='' href='/research/lifestyle-addiction/research/publications.html'>Publications</a></li><li class=''><a class='' href='/research/lifestyle-addiction/research/research-programme.html'>Research programme</a></li><li class='open '><a class='active ' href='/research/lifestyle-addiction/research/scientific-monitoring.html'>Scientific monitoring</a></li></ul></li><li class=''><a class='' href='/research/lifestyle-addiction/training.html'>Training & internships</a></li><li class=''><a class='' href='/research/lifestyle-addiction/news-events.html'>News & events</a></li><li class=''><a class='' href='/research/lifestyle-addiction/contact.html'>Contact us</a></li></ul></li></ul>
-</div>
-
-
-<script type="text/javascript">
-jQuery('document').ready(function() {
-    $ = jQuery;
-
-    if ($("#secondary_navigation.c-secondary-navigation li").hasClass("open")) {
-        $("#secondary_navigation.c-secondary-navigation li.open .arrow").parent().children("ul:first").css("display", "block");
-
-        if ($("#secondary_navigation.c-secondary-navigation a").hasClass("root")) {
-            // Make sure the arrow of the root is in "open" state
-            $("#secondary_navigation.c-secondary-navigation .root").parent().children("div.arrow").addClass("open");
-
-            $("#secondary_navigation.c-secondary-navigation li li li.open").parent("ul:first").slideToggle('fast');
-            $("#secondary_navigation.c-secondary-navigation li li li.open").parent().parent().toggleClass('open');
-        }
-        else {
-            $("#secondary_navigation.c-secondary-navigation li li.open").parent("ul:first").slideToggle('fast');
-            $("#secondary_navigation.c-secondary-navigation li li.open").parent().parent().toggleClass('open');
-        }
-    }
-
-    if (window.innerWidth <= 480) {
-        $("#secondary_navigation.c-secondary-navigation .arrow.open:first-child").toggleClass('open');
-        var $this = $("#secondary_navigation.c-secondary-navigation .arrow.open:first");
-        $this.toggleClass('open');
-        $this.parent().toggleClass('open');
-        $this.parent().children('ul').slideToggle('fast');
-    }
-
-
-	$("#secondary_navigation.c-secondary-navigation .arrow").bind('click touch', function(e) {
-		e.preventDefault();
-       	var $this = $(this);
-        $this.toggleClass('open');
-
-        // Put a little timer so the closing level doesn't change background color
-        if ($this.parent().hasClass('open')) {
-        	setTimeout(function(){$this.parent().toggleClass('open');}, 200);
-        }
-        else {
-			$this.parent().toggleClass('open');
-        }
-
-        $this.parent().children('ul').slideToggle('fast');
-    });
-});
-</script></div>
 <div class="section separator">
 
 
