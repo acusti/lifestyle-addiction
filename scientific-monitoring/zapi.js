@@ -65,6 +65,8 @@
 						},
 						$entry,
 						$bib,
+						bib_html,
+						bib_url_start,
 						entry;
 
 					for (; i < len; i++) {
@@ -78,7 +80,18 @@
 						// ref_html += refs[i].content;
 						$bib = $entry.find('subcontent').filter(filterByType('bib')).children('div');
 						if ($bib.length) {
-							ref_html += $bib[0].outerHTML;
+							bib_html = $bib[0].outerHTML;
+							if (entry.url) {
+								bib_url_start = bib_html.lastIndexOf(' from http://');
+								if (bib_url_start === -1) {
+									bib_url_start = bib_html.lastIndexOf(' from https://');
+								}
+								if (bib_url_start > 0) {
+									bib_url_start = bib_html.lastIndexOf('. Retrieved ');
+									bib_html = bib_html.substring(0, bib_url_start + 1) + bib_html.substring(bib_html.indexOf('</div>'));
+								}
+							}
+							ref_html += bib_html;
 						}
 					}
 					callback(ref_html);
