@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="http://www.concordia.ca/etc/designs/concordia/concordia-master-templates.min.css">
+<style>
+	#boot > h6 {
+		margin-top: 1em;
+	}
+</style>
+</head>
+<body id="boot">
+<script src="zapi.js"></script>
+<script>
+(function() {
+	var // Set up params
+		zapi_params = {
+			collection: 'HSBKRH68',
+			mode: 'archive'
+		};
+
+	zotero_api.getReferences(zapi_params, function(content) {
+		document.body.innerHTML += content;
+	});
+})();
+</script>
+</body>
+</html>
