@@ -22,7 +22,7 @@
 		// HTML and CSS snippets
 		loading_indicator_styles : '<style>.spinner { display: none; position: absolute; left: 45%; width: 50px; height: 30px; text-align: center; font-size: 10px; } body.loading-references .spinner { display: block; } .spinner > div { background-color: #333; height: 100%; width: 6px; margin: 0 1px; display: inline-block;  -webkit-animation: stretchdelay 1.2s infinite ease-in-out; animation: stretchdelay 1.2s infinite ease-in-out; } .spinner .rect2 { -webkit-animation-delay: -1.1s; animation-delay: -1.1s; } .spinner .rect3 { -webkit-animation-delay: -1.0s; animation-delay: -1.0s; } .spinner .rect4 { -webkit-animation-delay: -0.9s; animation-delay: -0.9s; } .spinner .rect5 { -webkit-animation-delay: -0.8s; animation-delay: -0.8s; } @-webkit-keyframes stretchdelay { 0%, 40%, 100% { -webkit-transform: scaleY(0.4) } 20% { -webkit-transform: scaleY(1.0) } } @keyframes stretchdelay { 0%, 40%, 100% { transform: scaleY(0.4); -webkit-transform: scaleY(0.4); } 20% {  transform: scaleY(1.0); -webkit-transform: scaleY(1.0); } }</style>',
 		loading_indicator_html : '<div class="spinner"><div class="rect1"></div><div class="rect2"></div><div class="rect3"></div><div class="rect4"></div><div class="rect5"></div></div>',
-		year_heading_styles : '<style>#boot .reference-year { margin-top: 20px; } #boot .reference-year:first-child { margin-top: 0; }</style>',
+		year_heading_styles : '<style>#boot .year-section > h2 { margin-top: 20px; } #boot .year-section:first-child > h2 { margin-top: 0; }</style>',
 		// Set the correct height of the tab iframe
 		tab_height_timeout: '',
 		fixTabHeight: function() {
@@ -37,6 +37,11 @@
 					zapi.$window.on('resize.tabs', zapi.fixTabHeight);
 				}, 200);
 			}, 200);
+		},
+		filterByType: function(type) {
+			return function() {
+				return $(this).attr('zapi:type') === type;
+			};
 		},
 		buildParams: function(options) {
 			var params = $.extend({}, zapi.defaults, options);
@@ -86,22 +91,18 @@
 				dataType: 'jsonp',
 				success: function(resp) {
 					var // Structure of resp: resp.responseData.feed.entries[]
-						$feed    = $($.parseXML(resp.responseData.xmlString)),
-						$entries = $feed.find('entry'),
-						len      = $entries.length,
-						i        = 0,
-						ref_html = '',
-						filterByType = function(type) {
-							return function() {
-								return $(this).attr('zapi:type') === type;
-							};
-						},
+						$feed       = $($.parseXML(resp.responseData.xmlString)),
+						$entries    = $feed.find('entry'),
+						len         = $entries.length,
+						i           = 0,
+						ref_html    = '',
+						the_year    = '',
+						is_new_year = false,
 						$entry,
 						$bib,
 						bib_html,
 						bib_url_start,
-						entry,
-						the_year   = '';
+						entry;
 
 					// Check if we have set the total results yet
 					if (zapi.total === false) {
@@ -110,20 +111,30 @@
 					for (; i < len; i++) {
 						$entry = $($entries[i]);
 						// If this selector doesn't work, we need to use a filter function and check attr('zapi:type')
-						entry = $.parseJSON($entry.find('subcontent').filter(filterByType('json')).text());
+						entry = $.parseJSON($entry.find('subcontent').filter(zapi.filterByType('json')).text());
 						
-						// Archive?
+						// Archive
 						if (is_archive) {
 							the_year = $entry.find('year').text();
-							if (zapi.years[zapi.years.length - 1] !== the_year) {
-								ref_html += '<h2 class="reference-year" id="year-' + the_year + '">' + the_year + '</h2>';
+							is_new_year = zapi.years[zapi.years.length - 1] !== the_year;
+							// Is it a new year section or the first of this group of references
+							if (!ref_html.length || is_new_year) {
+								// If this is not the first year header and not the first of this group of references, close the previous year div
+								if (zapi.years.length && ref_html.length) {
+									ref_html += '</div>';
+								}
+								ref_html += '<div class="year-section ' + the_year + '">';
+								// If first of this year, add heading
+								if (is_new_year) {
+									ref_html += '<h2 id="year-' + the_year + '">' + the_year + '</h2>';
+								}
 								zapi.years.push(the_year);
 							}
 						}
 						// Title
 						ref_html += '<h6>' + (entry.url ? '<a href="' + entry.url + '" target="_blank">' : '') + entry.title + (entry.url ? '</a>' : '') + '</h6>';
 
-						$bib = $entry.find('subcontent').filter(filterByType('bib')).children('div');
+						$bib = $entry.find('subcontent').filter(zapi.filterByType('bib')).children('div');
 						if ($bib.length) {
 							bib_html = $bib[0].outerHTML;
 							if (entry.url) {
@@ -138,6 +149,11 @@
 							}
 							ref_html += bib_html;
 						}
+					}
+					// Archive
+					if (is_archive) {
+						// Close div.year-section
+						ref_html += '</div>';
 					}
 					callback(ref_html);
 					zapi.$parent_body.removeClass('loading-references');
