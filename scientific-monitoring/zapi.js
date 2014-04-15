@@ -19,6 +19,7 @@
 		tab_height_timeout: '',
 		// An array of years of the references (for archive page)
 		years : [],
+		total : false,
 		// Set the correct height of the tab iframe
 		fixTabHeight: function() {
 			window.clearTimeout(zapi.tab_height_timeout);
@@ -98,6 +99,10 @@
 						entry,
 						the_year   = '';
 
+					// Check if we have set the total results yet
+					if (zapi.total === false) {
+						zapi.total = parseInt($feed.find('totalResults').text(), 10);
+					}
 					for (; i < len; i++) {
 						$entry = $($entries[i]);
 						// If this selector doesn't work, we need to use a filter function and check attr('zapi:type')
@@ -136,8 +141,8 @@
 					// And then trigger the logic once right away for the default tab
 					zapi.$window.on('resize.tabs', zapi.fixTabHeight).trigger('resize.tabs');
 					
-					// If we returned as many references as we requested and it is an archive, add a waypoint to the parent window to load the next set of results
-					if (is_archive && len === params.num_entries) {
+					// If we have not yet loaded all the references and it is an archive, add a handler to the parent window to load the next set of results
+					if (is_archive && params.start + params.num_entries < zapi.total) {
 						params.start += params.num_entries;
 						// Make sure resize.tabs has had a chance to do its magic by attaching waypoint after 500 ms
 						window.setTimeout(function() {
