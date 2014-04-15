@@ -12,9 +12,10 @@
 		},
 		collection_name: window.location.pathname.split('/').pop().replace('archive-', '').replace('monitoring-', '').replace('.html', ''),
 		// Element cache (careful with using string selectors with this jQuery; it will search the parent DOM)
-		$body: $(document.body),
-		$window: $(window),
-		$footer: $('.c-back-to-top'),
+		$body        : $(document.body),
+		$window      : $(window),
+		$parent_body : $('body'),
+		$footer      : $('.c-back-to-top'),
 		tab_height_timeout: '',
 		// Cache of what year is being processed (for archive page)
 		current_year: '',
@@ -72,8 +73,9 @@
 				// And our markup
 				zapi.$footer.before('<div class="spinner"><div class="rect1"></div><div class="rect2"></div><div class="rect3"></div><div class="rect4"></div><div class="rect5"></div></div>');
 			}
+			
 			// Add loading references class
-			$('body').addClass('loading-references');
+			zapi.$parent_body.addClass('loading-references');
 			$.ajax({
 				url: feed_url,
 				dataType: 'jsonp',
@@ -129,7 +131,7 @@
 						}
 					}
 					callback(ref_html);
-					$('body').removeClass('loading-references');
+					zapi.$parent_body.removeClass('loading-references');
 					// When this tab is selected, a resize is triggered; use that opportunity to fix the iframe height
 					// And then trigger the logic once right away for the default tab
 					zapi.$window.on('resize.tabs', zapi.fixTabHeight).trigger('resize.tabs');
@@ -177,6 +179,6 @@
 		js_plugin_src = window.location.href.split('/');
 		js_plugin_src.pop();
 		js_plugin_src.push('jquery.inview.min.js');
-		$('body').append('<script src="' + js_plugin_src.join('/') + '"><\/script>');
+		zapi.$parent_body.append('<script src="' + js_plugin_src.join('/') + '"><\/script>');
 	}
 })(window.jQuery || window.parent.jQuery);
