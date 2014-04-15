@@ -22,7 +22,7 @@
 		// HTML and CSS snippets
 		loading_indicator_styles : '<style>.spinner { display: none; position: absolute; left: 45%; width: 50px; height: 30px; text-align: center; font-size: 10px; } body.loading-references .spinner { display: block; } .spinner > div { background-color: #333; height: 100%; width: 6px; margin: 0 1px; display: inline-block;  -webkit-animation: stretchdelay 1.2s infinite ease-in-out; animation: stretchdelay 1.2s infinite ease-in-out; } .spinner .rect2 { -webkit-animation-delay: -1.1s; animation-delay: -1.1s; } .spinner .rect3 { -webkit-animation-delay: -1.0s; animation-delay: -1.0s; } .spinner .rect4 { -webkit-animation-delay: -0.9s; animation-delay: -0.9s; } .spinner .rect5 { -webkit-animation-delay: -0.8s; animation-delay: -0.8s; } @-webkit-keyframes stretchdelay { 0%, 40%, 100% { -webkit-transform: scaleY(0.4) } 20% { -webkit-transform: scaleY(1.0) } } @keyframes stretchdelay { 0%, 40%, 100% { transform: scaleY(0.4); -webkit-transform: scaleY(0.4); } 20% {  transform: scaleY(1.0); -webkit-transform: scaleY(1.0); } }</style>',
 		loading_indicator_html : '<div class="spinner"><div class="rect1"></div><div class="rect2"></div><div class="rect3"></div><div class="rect4"></div><div class="rect5"></div></div>',
-		year_heading_styles : '<style>#boot .year-section > h2 { margin-top: 20px; } #boot .year-section:first-child > h2 { margin-top: 0; }</style>',
+		year_heading_styles : '<style>#boot .year-section > h2 { margin-top: 20px; } #boot .year-section.first > h2 { margin-top: 0; }</style>',
 		// Set the correct height of the tab iframe
 		tab_height_timeout: '',
 		fixTabHeight: function() {
@@ -97,6 +97,7 @@
 						i           = 0,
 						ref_html    = '',
 						the_year    = '',
+						year_class  = '',
 						is_new_year = false,
 						$entry,
 						$bib,
@@ -123,7 +124,12 @@
 								if (zapi.years.length && ref_html.length) {
 									ref_html += '</div>';
 								}
-								ref_html += '<div class="year-section ' + the_year + '">';
+								year_class = 'year-section ' + the_year;
+								// If this is the very first year, add .first class
+								if (!zapi.years.length) {
+									year_class += ' first';
+								}
+								ref_html += '<div class="' + year_class + '">';
 								// If first of this year, add heading
 								if (is_new_year) {
 									ref_html += '<h2 id="year-' + the_year + '">' + the_year + '</h2>';
