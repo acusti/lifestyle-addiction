@@ -16,11 +16,15 @@
 		$window      : $(window),
 		$parent_body : $('body'),
 		$footer      : $('.c-back-to-top'),
-		tab_height_timeout: '',
 		// An array of years of the references (for archive page)
 		years : [],
 		total : false,
+		// HTML and CSS snippets
+		loading_indicator_styles : '<style>.spinner { display: none; position: absolute; left: 45%; width: 50px; height: 30px; text-align: center; font-size: 10px; } body.loading-references .spinner { display: block; } .spinner > div { background-color: #333; height: 100%; width: 6px; margin: 0 1px; display: inline-block;  -webkit-animation: stretchdelay 1.2s infinite ease-in-out; animation: stretchdelay 1.2s infinite ease-in-out; } .spinner .rect2 { -webkit-animation-delay: -1.1s; animation-delay: -1.1s; } .spinner .rect3 { -webkit-animation-delay: -1.0s; animation-delay: -1.0s; } .spinner .rect4 { -webkit-animation-delay: -0.9s; animation-delay: -0.9s; } .spinner .rect5 { -webkit-animation-delay: -0.8s; animation-delay: -0.8s; } @-webkit-keyframes stretchdelay { 0%, 40%, 100% { -webkit-transform: scaleY(0.4) } 20% { -webkit-transform: scaleY(1.0) } } @keyframes stretchdelay { 0%, 40%, 100% { transform: scaleY(0.4); -webkit-transform: scaleY(0.4); } 20% {  transform: scaleY(1.0); -webkit-transform: scaleY(1.0); } }</style>',
+		loading_indicator_html : '<div class="spinner"><div class="rect1"></div><div class="rect2"></div><div class="rect3"></div><div class="rect4"></div><div class="rect5"></div></div>',
+		year_heading_styles : '<style>#boot .reference-year { margin-top: 20px; } #boot .reference-year:first-child { margin-top: 0; }</style>',
 		// Set the correct height of the tab iframe
+		tab_height_timeout: '',
 		fixTabHeight: function() {
 			window.clearTimeout(zapi.tab_height_timeout);
 			zapi.tab_height_timeout = window.setTimeout(function() {
@@ -63,16 +67,16 @@
 			
 			// Check if the iframe has our styles yet
 			if (!zapi.$body.hasClass('ready')) {
-				$(document).find('head').append('<style>#boot .reference-year { margin-top: 20px; } #boot .reference-year:first-child { margin-top: 0; }</style>');
+				$(document).find('head').append(zapi.year_heading_styles);
 				zapi.$body.addClass('ready');
 			}
 
 			// If the spinner markup is not yet in the parent.window DOM, set it up and add styles
 			if (zapi.$footer.prev()[0].className !== 'spinner') {
 				// First, our styles
-				$('head').append('<style>.spinner { display: none; position: absolute; left: 45%; width: 50px; height: 30px; text-align: center; font-size: 10px; } body.loading-references .spinner { display: block; } .spinner > div { background-color: #333; height: 100%; width: 6px; margin: 0 1px; display: inline-block;  -webkit-animation: stretchdelay 1.2s infinite ease-in-out; animation: stretchdelay 1.2s infinite ease-in-out; } .spinner .rect2 { -webkit-animation-delay: -1.1s; animation-delay: -1.1s; } .spinner .rect3 { -webkit-animation-delay: -1.0s; animation-delay: -1.0s; } .spinner .rect4 { -webkit-animation-delay: -0.9s; animation-delay: -0.9s; } .spinner .rect5 { -webkit-animation-delay: -0.8s; animation-delay: -0.8s; } @-webkit-keyframes stretchdelay { 0%, 40%, 100% { -webkit-transform: scaleY(0.4) } 20% { -webkit-transform: scaleY(1.0) } } @keyframes stretchdelay { 0%, 40%, 100% { transform: scaleY(0.4); -webkit-transform: scaleY(0.4); } 20% {  transform: scaleY(1.0); -webkit-transform: scaleY(1.0); } }</style>');
+				$('head').append(zapi.loading_indicator_styles);
 				// And our markup
-				zapi.$footer.before('<div class="spinner"><div class="rect1"></div><div class="rect2"></div><div class="rect3"></div><div class="rect4"></div><div class="rect5"></div></div>');
+				zapi.$footer.before(zapi.loading_indicator_html);
 			}
 			
 			// Add loading references class
