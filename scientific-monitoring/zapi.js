@@ -17,8 +17,8 @@
 		$parent_body : $('body'),
 		$footer      : $('.c-back-to-top'),
 		tab_height_timeout: '',
-		// Cache of what year is being processed (for archive page)
-		current_year: '',
+		// An array of years of the references (for archive page)
+		years : [],
 		// Set the correct height of the tab iframe
 		fixTabHeight: function() {
 			window.clearTimeout(zapi.tab_height_timeout);
@@ -62,10 +62,10 @@
 			
 			// Check if the iframe has our styles yet
 			if (!zapi.$body.hasClass('ready')) {
-				$(document).find('head').append('<style>#boot h3.reference-year { margin-top: 20px; } #boot h3.reference-year:first-child { margin-top: 0; }</style>');
+				$(document).find('head').append('<style>#boot .reference-year { margin-top: 20px; } #boot .reference-year:first-child { margin-top: 0; }</style>');
 				zapi.$body.addClass('ready');
 			}
-			
+
 			// If the spinner markup is not yet in the parent.window DOM, set it up and add styles
 			if (zapi.$footer.prev()[0].className !== 'spinner') {
 				// First, our styles
@@ -106,9 +106,9 @@
 						// Archive?
 						if (is_archive) {
 							the_year = $entry.find('year').text();
-							if (zapi.current_year !== the_year) {
-								ref_html += '<h3 class="reference-year">' + the_year + '</h3>';
-								zapi.current_year = the_year;
+							if (zapi.years[zapi.years.length - 1] !== the_year) {
+								ref_html += '<h2 class="reference-year" id="year-' + the_year + '">' + the_year + '</h2>';
+								zapi.years.push(the_year);
 							}
 						}
 						// Title
