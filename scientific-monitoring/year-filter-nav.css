@@ -1,5 +1,6 @@
 nav.year-filter {
 	width: 30%;
+	min-width: 160px;
 	float: right;
 	padding: 1em;
 	margin-left: 1em;
@@ -15,6 +16,10 @@ nav.year-filter.active {
 	max-height: 450px;
 	overflow-y: auto;
 	cursor: default;
+}
+body.loading-references nav.year-filter.active {
+	max-height: 110px;
+	overflow: hidden;
 }
 nav.year-filter h3 {
 	text-align: center;
