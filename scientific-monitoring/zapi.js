@@ -49,12 +49,12 @@
 			window.clearTimeout(zapi.tab_height_timeout);
 			zapi.tab_height_timeout = window.setTimeout(function() {
 				// Remove this event listener, adjust height, add back the listener
-				zapi.$window.off('resize.tabs');
+				zapi.$window.off('resize.tabs.' + zapi.collection_name);
 				// Set height with extra 50px
 				window.frameElement.height = zapi.tab_height = zapi.$body.parent().height() + 50;
 				// Add back the listener
 				window.setTimeout(function() {
-					zapi.$window.on('resize.tabs', zapi.fixTabHeight);
+					zapi.$window.on('resize.tabs.' + zapi.collection_name, zapi.fixTabHeight);
 				}, 200);
 			}, 200);
 		},
@@ -217,31 +217,28 @@
 						// Set this flag now to false to avoid conflicts with calling getReferences again
 						zapi.is_init = false;
 						// Attach filter by year click handler
-						zapi.$year_filter = zapi.$body.find('nav.year-filter');
-						zapi.$year_filter.on('click', zapi.loadYearFilterList);
-						zapi.$body.on('references-load', function() {
+						zapi.$year_filter = zapi.$body.find('.year-filter');
+						zapi.$body.on('click.year-filter.' + zapi.collection_name, '.year-filter', zapi.loadYearFilterList);
+						zapi.$body.on('references-load.' + zapi.collection_name, function() {
 							var // Prepare for year calculations
 								year_list = '',
 								i         = 0,
 								len       = zapi.years.length;
 
 							// Reset $year_filter object from DOM
-							zapi.$year_filter = zapi.$body.find('nav.year-filter');
+							zapi.$year_filter = zapi.$body.find('.year-filter');
 							// Remove all click handlers, then add back simple toggle handler
-							zapi.$year_filter.off('click').on('click', function() {
-								$(this).addClass('active');
-							});
-							zapi.$body.find('.year-filter h3').off('click').on('click', zapi.yearFilterTitleToggle);
+							zapi.$body.off('click.year-filter.' + zapi.collection_name).on('click.year-filter.' + zapi.collection_name, '.year-filter', zapi.yearFilterToggle);
+							zapi.$body.off('click.year-filter.' + zapi.collection_name).on('click.year-filter.' + zapi.collection_name, '.year-filter h3', zapi.yearFilterTitleToggle);
 							// Set up year section element cache
 							zapi.$year_sections = zapi.$body.find('.' + zapi.year_section_class);
 							// Build years list
 							for (; i < len; i++) {
 								year_list += '<h6><a class="year-link" href="#year-' + zapi.years[i] + '">' + zapi.years[i] + '</a></h6>';
 							}
-							// year_list += '</ul>';
 							zapi.$year_filter.append(year_list);
 							zapi.$year_links = zapi.$year_filter.find('a.year-link');
-							zapi.$year_links.on('click', function(evt) {
+							zapi.$year_links.on('click.' + zapi.collection_name, function(evt) {
 								evt.preventDefault();
 								var $year_link   = $(this),
 									active_years = '';
@@ -256,23 +253,37 @@
 								zapi.$body.addClass('filtered');
 								zapi.$year_sections.not(active_years).removeClass('active').fadeOut();
 								zapi.$year_sections.filter(active_years).addClass('active').fadeIn();
+								// Recalculate iframe height after 0.3 seconds
+								window.setTimeout(function() {
+									zapi.$window.trigger('resize.tabs.' + zapi.collection_name);
+								}, 300);
 							});
-							// Remove loading class and this handler
-							zapi.$body.removeClass(zapi.loading_class).off('references-load');
+							// Remove this handler
+							zapi.$body.off('references-load.' + zapi.collection_name);
+							// After letting year links settle, remove loading class (to enable smooth dropdown effect)
+							window.setTimeout(function() {
+								zapi.$body.removeClass(zapi.loading_class);
+							}, 50);
+							// If .year-filter is currently active, recalculate iframe height after 0.5 seconds
+							if (zapi.$year_filter.hasClass('active')) {
+								window.setTimeout(function() {
+									zapi.$window.trigger('resize.tabs.' + zapi.collection_name);
+								}, 500);
+							}
 						});
 					}
 					zapi.is_init = false;
 					zapi.$parent_body.removeClass(zapi.loading_class);
 					// When this tab is selected, a resize is triggered; use that opportunity to fix the iframe height
 					// And then trigger the logic once right away for the default tab
-					zapi.$window.on('resize.tabs', zapi.fixTabHeight).trigger('resize.tabs');
+					zapi.$window.on('resize.tabs.' + zapi.collection_name, zapi.fixTabHeight).trigger('resize.tabs.' + zapi.collection_name);
 					
 					// If we have not yet loaded all the references and it is an archive, set up fetching of the next set of references
 					if (zapi.is_archive && zapi.params.start + zapi.params.num_entries < zapi.total) {
 						zapi.getNextReferences();
 					} else {
 						zapi.all_loaded = true;
-						zapi.$body.trigger('references-load');
+						zapi.$body.trigger('references-load.' + zapi.collection_name);
 					}
 				}
 			});
@@ -309,12 +320,12 @@
 			zapi.loading_indicator_html   = '<div class="spinner"><div class="rect1"></div><div class="rect2"></div><div class="rect3"></div><div class="rect4"></div><div class="rect5"></div></div>';
 			zapi.year_heading_styles      = '#boot .' + zapi.year_section_class + ' > h2 { margin-top: 20px; } #boot .' + zapi.year_section_class + '.first > h2 { margin-top: 0; }';
 			zapi.year_filter_html         = '<nav class="year-filter"><h3>Filter by year</h3>' + zapi.loading_indicator_html + '</nav>';
-			zapi.year_filter_styles       = 'nav.year-filter { width: 30%; float: right; padding: 1em; margin-left: 1em; margin-bottom: 0.5em; border: 1px solid rgb(204, 204, 204); max-height: 50px; overflow: hidden; -webkit-transition: max-height, 0.4s; transition: max-height, 0.4s; cursor: pointer; } nav.year-filter.active { max-height: 450px; overflow-y: auto; cursor: default; } nav.year-filter h3 { text-align: center; cursor: pointer; } nav.year-filter h6 a { display: block; padding: 0.2em 1em; } nav.year-filter h6 a:hover { background: rgb(240, 240, 240); text-decoration: none; } nav.year-filter h6 a.active, nav.year-filter h6 a.active:hover { background: rgb(221, 221, 221); } nav.year-filter .spinner { position: static; margin: 1em auto; }';
+			zapi.year_filter_styles       = '.year-filter { width: 30%; min-width: 160px; float: right; padding: 1em; margin-left: 1em; margin-bottom: 0.5em; border: 1px solid rgb(204, 204, 204); max-height: 50px; overflow: hidden; -webkit-transition: max-height, 0.4s; transition: max-height, 0.4s; cursor: pointer; } .year-filter.active { max-height: 450px; overflow-y: auto; cursor: default; } body.loading-references .year-filter.active { max-height: 105px; overflow: hidden; } .year-filter h3 { text-align: center; cursor: pointer; } .year-filter h6 a { display: block; padding: 0.2em 1em; } .year-filter h6 a:hover { background: rgb(240, 240, 240); text-decoration: none; } .year-filter h6 a.active, .year-filter h6 a.active:hover { background: rgb(221, 221, 221); } .year-filter .spinner { position: static; margin: 1em auto; }';
 		},
 		loadYearFilterList: function(evt) {
 			evt.preventDefault();
 			// Add .active class to year_filter
-			zapi.$year_filter.addClass('active');
+			zapi.$body.find('.year-filter').addClass('active');
 			if (!zapi.all_loaded) {
 				if (zapi.load_all) {
 					// Already working on it
@@ -326,21 +337,31 @@
 				zapi.params.num_entries = 99;
 				// Set loading class
 				zapi.$body.addClass(zapi.loading_class);
-				// Toggle year-filter .active class
-				zapi.$year_filter.addClass('active');
 				// Kick off reference retrieval
 				zapi.getReferences();
 			}
 			// Don't run this function again
-			zapi.$year_filter.off('click', zapi.loadYearFilterList);
-			zapi.$year_filter.on('click', function() {
+			zapi.$body.off('click.year-filter.' + zapi.collection_name);
+			zapi.$body.on('click.year-filter.' + zapi.collection_name, '.year-filter', zapi.yearFilterToggle);
+			zapi.$body.on('click.year-filter.' + zapi.collection_name, '.year-filter h3', zapi.yearFilterTitleToggle);
+		},
+		yearFilterToggle: function() {
+			var $year_filter = $(this);
+			if (!$year_filter.hasClass('active')) {
 				$(this).addClass('active');
-			});
-			zapi.$body.find('.year-filter h3').on('click', zapi.yearFilterTitleToggle);
+			}
+			// Recalculate iframe height after 0.5 seconds
+			window.setTimeout(function() {
+				zapi.$window.trigger('resize.tabs.' + zapi.collection_name);
+			}, 500);
 		},
 		yearFilterTitleToggle: function(evt) {
 			evt.stopPropagation();
 			zapi.$body.find('.year-filter').toggleClass('active');
+			// Recalculate iframe height after 0.5 seconds
+			window.setTimeout(function() {
+				zapi.$window.trigger('resize.tabs.' + zapi.collection_name);
+			}, 500);
 		}
 	};
 
