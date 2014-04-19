@@ -13,6 +13,9 @@
 		params          : {},
 		callback        : {},
 		collection_name : window.location.pathname.split('/').pop().replace('archive-', '').replace('monitoring-', '').replace('.html', ''),
+		feed_base       : 'https://api.zotero.org/users/',
+		namespace       : 'zapi\\:',
+		// @todo try fetching xml nodes with namespace prefix; if it doesn't work, set namespace prefix to ''
 		// Element cache (careful with using string selectors with this jQuery; it will search the parent DOM)
 		$body          : $(document.body),
 		$window        : $(window),
@@ -78,16 +81,16 @@
 			}
 		},
 		getFeedUrl: function() {
-			var zapi_url = 'https://api.zotero.org/users/';
+			var feed_url = zapi.feed_base;
 			
 			// Build the zotero api url
-			zapi_url += zapi.params.user + '/collections/' + zapi.params.collection + '/items?' + zapi.params.zotero_options + '&start=' + zapi.params.start + '&limit=' + zapi.params.num_entries;
+			feed_url += zapi.params.user + '/collections/' + zapi.params.collection + '/items?' + zapi.params.zotero_options + '&start=' + zapi.params.start + '&limit=' + zapi.params.num_entries;
 
 			if (zapi.params.q) {
-				zapi_url += '&q=' + zapi.params.q + '&qmode=titleCreatorYear';
+				feed_url += '&q=' + zapi.params.q + '&qmode=titleCreatorYear';
 			}
 			// Build the google feed api url and return it
-			return 'https://ajax.googleapis.com/ajax/services/feed/load?v=1.0&output=xml&num=' + zapi.params.num_entries + '&q=' + encodeURIComponent(zapi_url);
+			return 'https://ajax.googleapis.com/ajax/services/feed/load?v=1.0&output=xml&num=' + zapi.params.num_entries + '&q=' + encodeURIComponent(feed_url);
 		},
 		getReferences: function(options, callback) {
 			// If we have options (like on first load), use them
@@ -147,16 +150,23 @@
 
 					// Check if we have set the total results yet
 					if (zapi.total === false) {
-						zapi.total = parseInt($feed.find('totalResults').text(), 10);
+						// First time through, try to fetch totalResults node using the namespace ('zapi\\:')
+						zapi.total = $feed.find(zapi.namespace + 'totalResults');
+						// If that failed, try it without the namespace (set the namespace as an empty string)
+						if (!zapi.total.length) {
+							zapi.namespace = '';
+							zapi.total = $feed.find(zapi.namespace + 'totalResults');
+						}
+						zapi.total = parseInt(zapi.total.text(), 10);
 					}
 					for (; i < len; i++) {
 						$entry = $($entries[i]);
 						// If this selector doesn't work, we need to use a filter function and check attr('zapi:type')
-						entry = $.parseJSON($entry.find('subcontent').filter(zapi.filterByType('json')).text());
+						entry = $.parseJSON($entry.find(zapi.namespace + 'subcontent').filter(zapi.filterByType('json')).text());
 						
 						// Archive
 						if (zapi.is_archive) {
-							the_year = $entry.find('year').text();
+							the_year = $entry.find(zapi.namespace + 'year').text();
 							is_new_year = zapi.years[zapi.years.length - 1] !== the_year;
 							// Is it a new year section or the first of this group of references
 							if (!ref_html.length || is_new_year) {
@@ -180,7 +190,7 @@
 						// Title
 						ref_html += '<h6>' + (entry.url ? '<a href="' + entry.url + '" target="_blank">' : '') + entry.title + (entry.url ? '</a>' : '') + '</h6>';
 
-						$bib = $entry.find('subcontent').filter(zapi.filterByType('bib')).children('div');
+						$bib = $entry.find(zapi.namespace + 'subcontent').filter(zapi.filterByType('bib')).children('div');
 						if ($bib.length) {
 							bib_html = $bib[0].outerHTML;
 							if (entry.url) {
