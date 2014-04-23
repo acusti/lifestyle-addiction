@@ -223,9 +223,11 @@
 							zapi.$year_sections = zapi.$body.find('.' + zapi.year_section_class);
 							// Build years list
 							for (; i < len; i++) {
-								year_list += '<h6><a class="year-link" href="#year-' + zapi.years[i] + '">' + zapi.years[i] + '</a></h6>';
+								if (zapi.years[i].length) {
+									year_list += '<h6><a class="year-link" href="#year-' + zapi.years[i] + '">' + zapi.years[i] + '</a></h6>';
+								}
 							}
-							zapi.$year_filter.append(year_list);
+							zapi.$year_filter.find('.group').append(year_list);
 							zapi.$year_links = zapi.$year_filter.find('a.year-link');
 							zapi.$year_links.on('click.' + zapi.collection_name, function(evt) {
 								evt.preventDefault();
@@ -314,13 +316,14 @@
 			zapi.loading_indicator_styles = '.spinner { display: none; position: absolute; left: 45%; width: 50px; height: 30px; text-align: center; font-size: 10px; } body.' + zapi.loading_class + ' .spinner { display: block; } .spinner > div { background-color: #333; height: 100%; width: 6px; margin: 0 1px; display: inline-block;  -webkit-animation: stretchdelay 1.2s infinite ease-in-out; animation: stretchdelay 1.2s infinite ease-in-out; } .spinner .rect2 { -webkit-animation-delay: -1.1s; animation-delay: -1.1s; } .spinner .rect3 { -webkit-animation-delay: -1.0s; animation-delay: -1.0s; } .spinner .rect4 { -webkit-animation-delay: -0.9s; animation-delay: -0.9s; } .spinner .rect5 { -webkit-animation-delay: -0.8s; animation-delay: -0.8s; } @-webkit-keyframes stretchdelay { 0%, 40%, 100% { -webkit-transform: scaleY(0.4) } 20% { -webkit-transform: scaleY(1.0) } } @keyframes stretchdelay { 0%, 40%, 100% { transform: scaleY(0.4); -webkit-transform: scaleY(0.4); } 20% {  transform: scaleY(1.0); -webkit-transform: scaleY(1.0); } }';
 			zapi.loading_indicator_html   = '<div class="spinner"><div class="rect1"></div><div class="rect2"></div><div class="rect3"></div><div class="rect4"></div><div class="rect5"></div></div>';
 			zapi.year_heading_styles      = '#boot .' + zapi.year_section_class + ' > h2 { margin-top: 20px; } #boot .' + zapi.year_section_class + '.first > h2 { margin-top: 0; }';
-			zapi.year_filter_html         = '<nav class="year-filter c-accordion"><span class="item"><span class="group"><h3>Archive <div class="arrow"></div></h3>' + zapi.loading_indicator_html + '</span></span></nav>';
+			zapi.year_filter_html         = '<nav class="year-filter c-accordion"><div class="item"><span class="group"><h3>Archive <div class="arrow"></div></h3>' + zapi.loading_indicator_html + '</span></div></nav>';
 			zapi.year_filter_styles       = '<%= filter_nav_css %>';
 		},
 		loadYearFilterList: function(evt) {
-			evt.preventDefault();
-			// Add .active class to year_filter
-			zapi.$body.find('.year-filter').addClass('active');
+			evt.stopPropagation();
+			// Add .active/.open
+			zapi.yearFilterAddActive();
+			
 			if (!zapi.all_loaded) {
 				if (zapi.load_all) {
 					// Already working on it
@@ -340,26 +343,41 @@
 			zapi.$body.on('click.year-filter.' + zapi.collection_name, '.year-filter', zapi.yearFilterToggle);
 			zapi.$body.on('click.year-filter.' + zapi.collection_name, '.year-filter h3', zapi.yearFilterTitleToggle);
 		},
-		yearFilterToggle: function() {
-			var $year_filter = $(this);
-			if (!$year_filter.hasClass('active')) {
-				$(this).addClass('active');
-				$year_filter.find('item').addClass('open');
-			}
+		yearFilterToggle: function(evt) {
+			evt.stopPropagation();
+			// Add .active/.open
+			zapi.yearFilterAddActive();
+
 			// Recalculate iframe height after 0.5 seconds
 			window.setTimeout(function() {
 				zapi.$window.trigger('resize.tabs.' + zapi.collection_name);
 			}, 500);
 		},
 		yearFilterTitleToggle: function(evt) {
-			var $year_filter = zapi.$body.find('.year-filter');
 			evt.stopPropagation();
-			$year_filter.toggleClass('active');
-			$year_filter.find('item').toggleClass('open');
+			// Toggle .active/.open
+			zapi.yearFilterToggleActive();
+			
 			// Recalculate iframe height after 0.5 seconds
 			window.setTimeout(function() {
 				zapi.$window.trigger('resize.tabs.' + zapi.collection_name);
 			}, 500);
+		},
+		yearFilterAddActive: function($year_filter) {
+			$year_filter = $year_filter || zapi.$body.find('.year-filter');
+			if (!$year_filter.hasClass('active')) {
+				$year_filter.addClass('active');
+				$year_filter.find('.item').addClass('open');
+				return true;
+			}
+			return false;
+		},
+		yearFilterToggleActive: function($year_filter) {
+			$year_filter = $year_filter || zapi.$body.find('.year-filter');
+			if (!zapi.yearFilterAddActive($year_filter)) {
+				$year_filter.removeClass('active');
+				$year_filter.find('.item').removeClass('open');
+			}
 		}
 	};
 

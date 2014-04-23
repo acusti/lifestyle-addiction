@@ -1,43 +1,44 @@
-nav.year-filter {
+.year-filter {
 	width: 30%;
 	min-width: 160px;
 	float: right;
-	padding: 1em;
 	margin-left: 1em;
 	margin-bottom: 0.5em;
-	border: 1px solid rgb(204, 204, 204);
+}
+.year-filter .item {
 	max-height: 50px;
 	overflow: hidden;
-	-webkit-transition: max-height, 0.4s;
-	transition: max-height, 0.4s;
 	cursor: pointer;
 }
-nav.year-filter.active {
+.year-filter.active .item {
 	max-height: 450px;
 	overflow-y: auto;
 	cursor: default;
 }
-body.loading-references nav.year-filter.active {
+body.loading-references .year-filter.active .item {
 	max-height: 110px;
 	overflow: hidden;
 }
-nav.year-filter h3 {
-	position: relative;
+.year-filter h3 {
 	cursor: pointer;
 }
-nav.year-filter h6 a {
+.year-filter h6 a {
 	display: block;
 	padding: 0.2em 1em;
 }
-nav.year-filter h6 a:hover {
+#boot .year-filter h6 a:hover {
 	background: rgb(240, 240, 240);
 	text-decoration: none;
 }
-nav.year-filter h6 a.active,
-nav.year-filter h6 a.active:hover {
+.year-filter h6 a.active,
+.year-filter h6 a.active:hover {
 	background: rgb(221, 221, 221);
 }
-nav.year-filter .spinner {
+.year-filter .spinner {
 	position: static;
 	margin: 1em auto;
+}
+/* Override unwanted Concordia styles */
+#boot .year-filter.active .item:hover {
+	background-color: transparent;
 }
