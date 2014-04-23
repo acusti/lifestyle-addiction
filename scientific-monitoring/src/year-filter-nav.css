@@ -22,7 +22,7 @@ body.loading-references nav.year-filter.active {
 	overflow: hidden;
 }
 nav.year-filter h3 {
-	text-align: center;
+	position: relative;
 	cursor: pointer;
 }
 nav.year-filter h6 a {
