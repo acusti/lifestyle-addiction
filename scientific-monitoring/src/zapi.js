@@ -30,8 +30,6 @@
 		total      : false,
 		// Flag if is initial load
 		is_init    : true,
-		// Flag for if archive
-		is_archive : false,
 		// Flag for loading all references immediately
 		load_all   : false,
 		// Flag for keeping track if all references have been loaded
@@ -68,17 +66,6 @@
 		},
 		buildParams: function(options) {
 			zapi.params = $.extend({}, zapi.defaults, options);
-			zapi.is_archive = options.mode === 'archive';
-			if (zapi.is_archive) {
-				zapi.filterParamsArchive();
-			}
-		},
-		filterParamsArchive: function() {
-			if (!zapi.params.start) {
-				// Start at 20
-				zapi.params.start = 20;
-				zapi.params.num_entries = 50;
-			}
 		},
 		getFeedUrl: function() {
 			var feed_url = zapi.feed_base;
@@ -113,8 +100,7 @@
 			
 			// Check if the iframe has our styles yet
 			if (!zapi.$body.hasClass('ready')) {
-				// If is_archive, styles should include the spinner CSS
-				$(document).find('head').append('<style>' + zapi.year_heading_styles + (zapi.is_archive ? '\n' + zapi.loading_indicator_styles + '\n' + zapi.year_filter_styles : '') + '</style>');
+				$(document).find('head').append('<style>' + zapi.year_heading_styles + '\n' + zapi.loading_indicator_styles + '\n' + zapi.year_filter_styles + '</style>');
 				zapi.$body.addClass('ready');
 			}
 
@@ -145,8 +131,7 @@
 						$bib,
 						bib_html,
 						bib_url_start,
-						entry,
-						getNextReferences;
+						entry;
 
 					// Check if we have set the total results yet
 					if (zapi.total === false) {
@@ -164,27 +149,24 @@
 						// If this selector doesn't work, we need to use a filter function and check attr('zapi:type')
 						entry = $.parseJSON($entry.find(zapi.namespace + 'subcontent').filter(zapi.filterByType('json')).text());
 						
-						// Archive
-						if (zapi.is_archive) {
-							the_year = $entry.find(zapi.namespace + 'year').text();
-							is_new_year = zapi.years[zapi.years.length - 1] !== the_year;
-							// Is it a new year section or the first of this group of references
-							if (!ref_html.length || is_new_year) {
-								// If this is not the first year header and not the first of this group of references, close the previous year div
-								if (zapi.years.length && ref_html.length) {
-									ref_html += '</div>';
-								}
-								year_class = zapi.year_section_class + ' ' + the_year;
-								// If this is the very first year, add .first class
-								if (!zapi.years.length) {
-									year_class += ' first';
-								}
-								ref_html += '<div class="' + year_class + '">';
-								// If first of this year, add heading and push year onto years array
-								if (is_new_year) {
-									ref_html += '<h2 id="year-' + the_year + '">' + the_year + '</h2>';
-									zapi.years.push(the_year);
-								}
+						the_year = $entry.find(zapi.namespace + 'year').text();
+						is_new_year = zapi.years[zapi.years.length - 1] !== the_year;
+						// Is it a new year section or the first of this group of references
+						if (!ref_html.length || is_new_year) {
+							// If this is not the first year header and not the first of this group of references, close the previous year div
+							if (zapi.years.length && ref_html.length) {
+								ref_html += '</div>';
+							}
+							year_class = zapi.year_section_class + ' ' + the_year;
+							// If this is the very first year, add .first class
+							if (!zapi.years.length) {
+								year_class += ' first';
+							}
+							ref_html += '<div class="' + year_class + '">';
+							// If first of this year, add heading and push year onto years array
+							if (is_new_year) {
+								ref_html += '<h2 id="year-' + the_year + '">' + the_year + '</h2>';
+								zapi.years.push(the_year);
 							}
 						}
 						// Title
@@ -206,14 +188,11 @@
 							ref_html += bib_html;
 						}
 					}
-					// Archive
-					if (zapi.is_archive) {
-						// Close div.year-section
-						ref_html += '</div>';
-						// First time through, add in year filter html
-						if (zapi.is_init) {
-							ref_html = zapi.year_filter_html + ref_html;
-						}
+					// Close div.year-section
+					ref_html += '</div>';
+					// First time through, add in year filter html
+					if (zapi.is_init) {
+						ref_html = zapi.year_filter_html + ref_html;
 					}
 
 					// Finished building HTML
@@ -222,8 +201,8 @@
 					zapi.callback(ref_html);
 					// ----------------------
 
-					// Archive and initial run through, set up JS and styles for year filter
-					if (zapi.is_archive && zapi.is_init) {
+					// Initial run through, set up JS and styles for year filter
+					if (zapi.is_init) {
 						// Set this flag now to false to avoid conflicts with calling getReferences again
 						zapi.is_init = false;
 						// Attach filter by year click handler
@@ -288,8 +267,8 @@
 					// And then trigger the logic once right away for the default tab
 					zapi.$window.on('resize.tabs.' + zapi.collection_name, zapi.fixTabHeight).trigger('resize.tabs.' + zapi.collection_name);
 					
-					// If we have not yet loaded all the references and it is an archive, set up fetching of the next set of references
-					if (zapi.is_archive && zapi.params.start + zapi.params.num_entries < zapi.total) {
+					// If we have not yet loaded all the references, set up fetching of the next set of references
+					if (zapi.params.start + zapi.params.num_entries < zapi.total) {
 						zapi.getNextReferences();
 					} else {
 						zapi.all_loaded = true;
@@ -309,6 +288,12 @@
 				return;
 			}
 			zapi.params.start += zapi.params.num_entries;
+			
+			// If this is the first time calling getNextReferences, adjust num_entries to 50
+			if (zapi.params.start === zapi.params.num_entries) {
+				zapi.params.num_entries = 50;
+			}
+			
 			// If not load_all, add a handler to the parent window to load the next set of results
 			if (!zapi.load_all) {
 				zapi.$footer.on('inview.' + zapi.collection_name, function() {
@@ -329,8 +314,8 @@
 			zapi.loading_indicator_styles = '.spinner { display: none; position: absolute; left: 45%; width: 50px; height: 30px; text-align: center; font-size: 10px; } body.' + zapi.loading_class + ' .spinner { display: block; } .spinner > div { background-color: #333; height: 100%; width: 6px; margin: 0 1px; display: inline-block;  -webkit-animation: stretchdelay 1.2s infinite ease-in-out; animation: stretchdelay 1.2s infinite ease-in-out; } .spinner .rect2 { -webkit-animation-delay: -1.1s; animation-delay: -1.1s; } .spinner .rect3 { -webkit-animation-delay: -1.0s; animation-delay: -1.0s; } .spinner .rect4 { -webkit-animation-delay: -0.9s; animation-delay: -0.9s; } .spinner .rect5 { -webkit-animation-delay: -0.8s; animation-delay: -0.8s; } @-webkit-keyframes stretchdelay { 0%, 40%, 100% { -webkit-transform: scaleY(0.4) } 20% { -webkit-transform: scaleY(1.0) } } @keyframes stretchdelay { 0%, 40%, 100% { transform: scaleY(0.4); -webkit-transform: scaleY(0.4); } 20% {  transform: scaleY(1.0); -webkit-transform: scaleY(1.0); } }';
 			zapi.loading_indicator_html   = '<div class="spinner"><div class="rect1"></div><div class="rect2"></div><div class="rect3"></div><div class="rect4"></div><div class="rect5"></div></div>';
 			zapi.year_heading_styles      = '#boot .' + zapi.year_section_class + ' > h2 { margin-top: 20px; } #boot .' + zapi.year_section_class + '.first > h2 { margin-top: 0; }';
-			zapi.year_filter_html         = '<nav class="year-filter"><h3>Filter by year</h3>' + zapi.loading_indicator_html + '</nav>';
-			zapi.year_filter_styles       = '.year-filter { width: 30%; min-width: 160px; float: right; padding: 1em; margin-left: 1em; margin-bottom: 0.5em; border: 1px solid rgb(204, 204, 204); max-height: 50px; overflow: hidden; -webkit-transition: max-height, 0.4s; transition: max-height, 0.4s; cursor: pointer; } .year-filter.active { max-height: 450px; overflow-y: auto; cursor: default; } body.loading-references .year-filter.active { max-height: 105px; overflow: hidden; } .year-filter h3 { text-align: center; cursor: pointer; } .year-filter h6 a { display: block; padding: 0.2em 1em; } .year-filter h6 a:hover { background: rgb(240, 240, 240); text-decoration: none; } .year-filter h6 a.active, .year-filter h6 a.active:hover { background: rgb(221, 221, 221); } .year-filter .spinner { position: static; margin: 1em auto; }';
+			zapi.year_filter_html         = '<nav class="year-filter c-accordion"><span class="group"><h3>Archive <div class="arrow"></div></h3>' + zapi.loading_indicator_html + '</span></nav>';
+			zapi.year_filter_styles       = '<%= filter_nav_css %>';
 		},
 		loadYearFilterList: function(evt) {
 			evt.preventDefault();

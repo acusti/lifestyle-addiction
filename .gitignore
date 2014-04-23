@@ -1,2 +1,6 @@
 
 config.codekit
+
+.yo-rc.json
+
+node_modules/*
