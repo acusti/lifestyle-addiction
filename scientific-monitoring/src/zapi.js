@@ -314,7 +314,7 @@
 			zapi.loading_indicator_styles = '.spinner { display: none; position: absolute; left: 45%; width: 50px; height: 30px; text-align: center; font-size: 10px; } body.' + zapi.loading_class + ' .spinner { display: block; } .spinner > div { background-color: #333; height: 100%; width: 6px; margin: 0 1px; display: inline-block;  -webkit-animation: stretchdelay 1.2s infinite ease-in-out; animation: stretchdelay 1.2s infinite ease-in-out; } .spinner .rect2 { -webkit-animation-delay: -1.1s; animation-delay: -1.1s; } .spinner .rect3 { -webkit-animation-delay: -1.0s; animation-delay: -1.0s; } .spinner .rect4 { -webkit-animation-delay: -0.9s; animation-delay: -0.9s; } .spinner .rect5 { -webkit-animation-delay: -0.8s; animation-delay: -0.8s; } @-webkit-keyframes stretchdelay { 0%, 40%, 100% { -webkit-transform: scaleY(0.4) } 20% { -webkit-transform: scaleY(1.0) } } @keyframes stretchdelay { 0%, 40%, 100% { transform: scaleY(0.4); -webkit-transform: scaleY(0.4); } 20% {  transform: scaleY(1.0); -webkit-transform: scaleY(1.0); } }';
 			zapi.loading_indicator_html   = '<div class="spinner"><div class="rect1"></div><div class="rect2"></div><div class="rect3"></div><div class="rect4"></div><div class="rect5"></div></div>';
 			zapi.year_heading_styles      = '#boot .' + zapi.year_section_class + ' > h2 { margin-top: 20px; } #boot .' + zapi.year_section_class + '.first > h2 { margin-top: 0; }';
-			zapi.year_filter_html         = '<nav class="year-filter c-accordion"><span class="group"><h3>Archive <div class="arrow"></div></h3>' + zapi.loading_indicator_html + '</span></nav>';
+			zapi.year_filter_html         = '<nav class="year-filter c-accordion"><span class="item"><span class="group"><h3>Archive <div class="arrow"></div></h3>' + zapi.loading_indicator_html + '</span></span></nav>';
 			zapi.year_filter_styles       = '<%= filter_nav_css %>';
 		},
 		loadYearFilterList: function(evt) {
@@ -344,6 +344,7 @@
 			var $year_filter = $(this);
 			if (!$year_filter.hasClass('active')) {
 				$(this).addClass('active');
+				$year_filter.find('item').addClass('open');
 			}
 			// Recalculate iframe height after 0.5 seconds
 			window.setTimeout(function() {
@@ -351,8 +352,10 @@
 			}, 500);
 		},
 		yearFilterTitleToggle: function(evt) {
+			var $year_filter = zapi.$body.find('.year-filter');
 			evt.stopPropagation();
-			zapi.$body.find('.year-filter').toggleClass('active');
+			$year_filter.toggleClass('active');
+			$year_filter.find('item').toggleClass('open');
 			// Recalculate iframe height after 0.5 seconds
 			window.setTimeout(function() {
 				zapi.$window.trigger('resize.tabs.' + zapi.collection_name);
