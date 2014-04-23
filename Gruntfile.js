@@ -10,7 +10,10 @@ module.exports = function (grunt) {
 		uglify: {
 			dist: {
 				src: 'scientific-monitoring/zapi-compiled.js',
-				dest: 'scientific-monitoring/zapi.js'
+				dest: 'scientific-monitoring/zapi.js',
+				options: {
+					sourceMap: true
+				}
 			}
 		},
 		jshint: {
@@ -35,7 +38,7 @@ module.exports = function (grunt) {
 				src: 'Gruntfile.js'
 			},
 			zapi: {
-				src: '<%= uglify.dist.src %>'
+				src: '<%= copy.zapi.files[0].dest %>'
 			}
 		},
 		cssmin: {
