@@ -72,7 +72,10 @@
 			
 			// Build the zotero api url
 			feed_url += zapi.params.user + '/collections/' + zapi.params.collection + '/items?' + zapi.params.zotero_options + '&start=' + zapi.params.start + '&limit=' + zapi.params.num_entries;
-
+			
+			// Add a 24 hour cache busting date string
+			feed_url += '&cb=' + new Date().toDateString();
+			
 			if (zapi.params.q) {
 				feed_url += '&q=' + zapi.params.q + '&qmode=titleCreatorYear';
 			}
