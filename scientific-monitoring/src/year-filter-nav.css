@@ -6,6 +6,7 @@
 	margin-bottom: 0.5em;
 }
 .year-filter .item {
+	position: relative;
 	max-height: 50px;
 	overflow: hidden;
 	cursor: pointer;
@@ -19,6 +20,10 @@ body.loading-references .year-filter.active .item {
 	max-height: 110px;
 	overflow: hidden;
 }
+.year-filter .spinner {
+	position: static;
+	margin: 1em auto;
+}
 .year-filter h3 {
 	cursor: pointer;
 }
@@ -26,17 +31,16 @@ body.loading-references .year-filter.active .item {
 	display: block;
 	padding: 0.2em 1em;
 }
-#boot .year-filter h6 a:hover {
+.year-filter h6 a:hover {
 	background: rgb(240, 240, 240);
-	text-decoration: none;
 }
 .year-filter h6 a.active,
 .year-filter h6 a.active:hover {
 	background: rgb(221, 221, 221);
 }
-.year-filter .spinner {
-	position: static;
-	margin: 1em auto;
+/* Extra selector weight to override Concordia styles */
+#boot .year-filter h6 a:hover {
+	text-decoration: none;
 }
 /* Override unwanted Concordia styles */
 #boot .year-filter.active .item:hover {
