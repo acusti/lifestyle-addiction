@@ -9,11 +9,11 @@ module.exports = function (grunt) {
 		// Task configuration
 		uglify: {
 			dist: {
-				src: '<%= copy.zapi.files[0].dest %>',
-				dest: 'scientific-monitoring/zapi.js',
-				options: {
-					sourceMap: true,
-					sourceMapIncludeSources: true
+				src     : '<%= copy.zapi.files[0].dest %>',
+				dest    : 'scientific-monitoring/zapi.js',
+				options : {
+					sourceMap               : true,
+					sourceMapIncludeSources : true
 				}
 			}
 		},
@@ -22,18 +22,18 @@ module.exports = function (grunt) {
 				// To keep building even if the file fails jshint:
 				// force: true,
 				// Assume browser globals
-				browser: true,
+				browser  : true,
 				// What to be strict about
 				// === and !==
-				eqeqeq: true,
+				eqeqeq   : true,
 				// IE7 compatibility
-				es3: true,
-				newcap: true,
-				noempty: true,
-				quotmark: 'single',
-				undef: true,
-				unused: true,
-				trailing: true
+				es3      : true,
+				newcap   : true,
+				noempty  : true,
+				quotmark : 'single',
+				undef    : true,
+				unused   : true,
+				trailing : true
 			},
 			gruntfile: {
 				src: 'Gruntfile.js'
@@ -44,17 +44,17 @@ module.exports = function (grunt) {
 		},
 		cssmin: {
 			filternav: {
-				src: 'scientific-monitoring/src/year-filter-nav.css',
-				dest: 'scientific-monitoring/year-filter-nav.min.css'
+				src  : 'scientific-monitoring/src/year-filter-nav.css',
+				dest : 'scientific-monitoring/year-filter-nav.min.css'
 			}
 		},
 		copy: {
 			zapi: {
 				files: [
 					{
-						src: 'scientific-monitoring/src/zapi.js',
-						dest: 'scientific-monitoring/zapi-compiled.js',
-						filter: 'isFile'
+						src    : 'scientific-monitoring/src/zapi.js',
+						dest   : 'scientific-monitoring/zapi-compiled.js',
+						filter : 'isFile'
 					}
 				],
 				options : {
@@ -77,8 +77,8 @@ module.exports = function (grunt) {
 		connect: {
 			server: {
 				options: {
-					port: '1111',
-					useAvailablePort: true
+					port             : '1111',
+					useAvailablePort : true
 				}
 			}
 		},
