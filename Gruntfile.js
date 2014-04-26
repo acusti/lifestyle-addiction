@@ -12,7 +12,8 @@ module.exports = function (grunt) {
 				src: 'scientific-monitoring/zapi-compiled.js',
 				dest: 'scientific-monitoring/zapi.js',
 				options: {
-					sourceMap: true
+					sourceMap: true,
+					sourceMapIncludeSources: true
 				}
 			}
 		},
@@ -72,14 +73,26 @@ module.exports = function (grunt) {
 				}
 			}
 		},
+		// Sart a web server
+		connect: {
+			server: {
+				options: {
+					port: '1111',
+					useAvailablePort: true
+				}
+			}
+		},
 		watch: {
 			gruntfile: {
 				files: '<%= jshint.gruntfile.src %>',
 				tasks: ['jshint:gruntfile']
 			},
 			zapi: {
-				files: '<%= jshint.zapi.src %>',
-				tasks: ['cssmin', 'jshint:zapi', 'uglify:dist']
+				files: [
+					'<%= copy.zapi.files[0].src %>',
+					'<%= cssmin.filternav.src %>'
+				],
+				tasks: ['cssmin', 'copy', 'jshint:zapi', 'uglify:dist', 'clean']
 			}
 		},
 		clean: {
@@ -97,10 +110,11 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-contrib-cssmin');
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
+	grunt.loadNpmTasks('grunt-contrib-connect');
 	grunt.loadNpmTasks('grunt-contrib-watch');
 	grunt.loadNpmTasks('grunt-contrib-clean');
 
 	// Default task
-	grunt.registerTask('default', ['cssmin', 'copy', 'jshint', 'uglify', 'clean']);
+	grunt.registerTask('default', ['cssmin', 'copy', 'jshint', 'uglify', 'clean', 'connect', 'watch']);
 };
 
