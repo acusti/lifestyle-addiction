@@ -9,7 +9,7 @@ module.exports = function (grunt) {
 		// Task configuration
 		uglify: {
 			dist: {
-				src: 'scientific-monitoring/zapi-compiled.js',
+				src: '<%= copy.zapi.files[0].dest %>',
 				dest: 'scientific-monitoring/zapi.js',
 				options: {
 					sourceMap: true,
