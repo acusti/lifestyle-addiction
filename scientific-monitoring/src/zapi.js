@@ -183,9 +183,13 @@
 								if (bib_url_start === -1) {
 									bib_url_start = bib_html.lastIndexOf(' from https://');
 								}
-								if (bib_url_start > 0) {
-									bib_url_start = bib_html.lastIndexOf('. Retrieved ');
-									bib_html = bib_html.substring(0, bib_url_start + 1) + bib_html.substring(bib_html.indexOf('</div>'));
+								if (bib_url_start !== -1) {
+									// The "from [url]" text always has ' Retrieved' before it, so go find that text
+									// bib_url_start -= 10;
+									bib_url_start = bib_html.substring(0, bib_url_start).lastIndexOf(' Retrieved');
+									if (bib_url_start !== -1) {
+										bib_html = bib_html.substring(0, bib_url_start) + bib_html.substring(bib_html.indexOf('</div>'));
+									}
 								}
 							}
 							ref_html += bib_html;
