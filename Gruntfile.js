@@ -13,7 +13,10 @@ module.exports = function (grunt) {
 				dest    : 'scientific-monitoring/zapi.js',
 				options : {
 					sourceMap               : true,
-					sourceMapIncludeSources : true
+					sourceMapIncludeSources : true/*,
+					// For development mode
+					beautify                : true,
+					mangle                  : false*/
 				}
 			}
 		},
