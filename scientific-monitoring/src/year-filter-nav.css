@@ -2,7 +2,6 @@
 	width: 30%;
 	min-width: 160px;
 	float: right;
-	margin-left: 1em;
 	margin-bottom: 0.5em;
 }
 .year-filter .item {
@@ -31,12 +30,39 @@ body.loading-references .year-filter.active .item {
 	display: block;
 	padding: 0.2em 1em;
 }
-.year-filter h6 a:hover {
+.year-filter h6 a:hover,
+.quarter-filter:hover {
 	background: rgb(240, 240, 240);
+	cursor: pointer;
 }
 .year-filter h6 a.active,
-.year-filter h6 a.active:hover {
+.year-filter h6 a.active:hover,
+.quarter-filter.active,
+.quarter-filter.active:hover {
 	background: rgb(221, 221, 221);
+}
+.quarters {
+	float: left;
+	margin-left: 9px;
+	margin-top: 20px;
+	/* Match the line height of the h2 */
+	line-height: 42px;
+}
+.year-section.first .quarters {
+	margin-top: 0;
+}
+.quarter-filter {
+	border: 1px solid rgb(229, 229, 229);
+	font-weight: bold;
+	font-size: 13px;
+	padding: 0.25em 0.35em;
+	margin: 0 0.25em;
+}
+h2.quarterly {
+	float: left;
+}
+.ref-entry {
+	clear: left;
 }
 /* Extra selector weight to override Concordia styles */
 #boot .year-filter h6 a:hover {

@@ -24,6 +24,13 @@
 		$year_filter   : $(),
 		$year_links    : $(),
 		$year_sections : $(),
+		// Labels for quarter-year filters
+		quarter_labels  : [
+			'Jan - April',
+			'April - June',
+			'July - Sept',
+			'Oct - Dec'
+		],
 		// An array of years of the references (for archive page)
 		years      : [],
 		// Total number of references
@@ -130,11 +137,13 @@
 						the_year    = '',
 						year_class  = '',
 						is_new_year = false,
+						the_month,
 						$entry,
 						$bib,
 						bib_html,
 						bib_url_start,
-						entry;
+						entry,
+						entry_class;
 
 					// Check if we have set the total results yet
 					if (zapi.total === false) {
@@ -151,6 +160,8 @@
 						$entry = $($entries[i]);
 						// If this selector doesn't work, we need to use a filter function and check attr('zapi:type')
 						entry = $.parseJSON($entry.find(zapi.namespace + 'subcontent').filter(zapi.filterByType('json')).text());
+						
+						entry_class = 'ref-entry';
 						
 						the_year = $entry.find(zapi.namespace + 'year').text();
 						is_new_year = zapi.years[zapi.years.length - 1] !== the_year;
@@ -172,6 +183,18 @@
 								zapi.years.push(the_year);
 							}
 						}
+						// Quarterly logic requires the date also
+						if (zapi.params.quarterly) {
+							the_month = new Date(entry.date);
+							the_month = the_month.getMonth();
+							if (isNaN(the_month)) {
+								// Default to the first month
+								the_month = 0;
+							}
+							entry_class += ' year-' + the_year + ' quarter-' + Math.floor(the_month / 3);
+						}
+						// Entry wrap
+						ref_html += '<div class="' + entry_class + '">';
 						// Title
 						ref_html += '<h6>' + (entry.url ? '<a href="' + entry.url + '" target="_blank">' : '') + entry.title + (entry.url ? '</a>' : '') + '</h6>';
 
@@ -194,6 +217,7 @@
 							}
 							ref_html += bib_html;
 						}
+						ref_html += '</div>';
 					}
 					// Close div.year-section
 					ref_html += '</div>';
@@ -238,19 +262,28 @@
 							zapi.$year_links = zapi.$year_filter.find('a.year-link');
 							zapi.$year_links.on('click.' + zapi.collection_name, function(evt) {
 								evt.preventDefault();
-								var $year_link   = $(this),
-									active_years = '';
-
+								var $year_link  = $(this),
+									active_year = '';
+								
+								// No other year links should be active
+								zapi.$year_links.not($year_link).removeClass('active');
 								$year_link.toggleClass('active');
+								
+								if ($year_link.hasClass('active')) {
+									active_year = '.' + this.innerHTML;
+									/*zapi.$year_links.filter('.active').each(function() {
+										active_year += (active_year.length ? ', ' : '') + '.' + this.innerHTML;
+									});*/
 
-								zapi.$year_links.filter('.active').each(function() {
-									active_years += (active_years.length ? ', ' : '') + '.' + this.innerHTML;
-								});
+									// Add filtered class
+									zapi.$body.addClass('filtered');
+									zapi.$year_sections.not(active_year).removeClass('active').fadeOut();
+									zapi.$year_sections.filter(active_year).addClass('active').fadeIn();
+								} else {
+									zapi.$body.removeClass('filtered');
+									zapi.$year_sections.fadeIn();
+								}
 
-								// Add filtered class
-								zapi.$body.addClass('filtered');
-								zapi.$year_sections.not(active_years).removeClass('active').fadeOut();
-								zapi.$year_sections.filter(active_years).addClass('active').fadeIn();
 								// Recalculate iframe height after 0.3 seconds
 								window.setTimeout(function() {
 									zapi.$window.trigger('resize.tabs.' + zapi.collection_name);
@@ -267,6 +300,58 @@
 								window.setTimeout(function() {
 									zapi.$window.trigger('resize.tabs.' + zapi.collection_name);
 								}, 500);
+							}
+							// Now set up quarter filters, if applicable
+							if (zapi.params.quarterly) {
+								zapi.$body.find('h2').each(function() {
+									var $year_title = $(this),
+										the_year = this.innerHTML,
+										quarters,
+										$quarters,
+										refs_by_quarter = [];
+									
+									if (!the_year.length) {
+										return;
+									}
+									quarters = '<div class="quarters">';
+									
+									for (var i = 0; i < 4; i++) {
+										refs_by_quarter[i] = zapi.$body.find('.' + zapi.year_section_class + '.' + the_year + ' .quarter-' + i);
+										if (refs_by_quarter[i].length) {
+											quarters += '<span class="quarter-filter" data-quarter="' + i + '">' + zapi.quarter_labels[i] + '</span>';
+										}
+									}
+									
+									quarters += '</div>';
+									
+									$year_title.addClass('quarterly');
+									$quarters = $(quarters).insertAfter($year_title);
+									$quarters.on('click', '.quarter-filter', function() {
+										var $filter = $(this),
+											active_quarter = '',
+											i;
+										// No other quarter links should be active
+										$quarters.find('.quarter-filter').not($filter).removeClass('active');
+										$filter.toggleClass('active');
+										
+										if ($filter.hasClass('active')) {
+											active_quarter = parseInt($filter.data('quarter'), 10);
+											for (i = 0; i < 4; i++) {
+												if (i !== active_quarter) {
+													refs_by_quarter[i].fadeOut();
+												} else {
+													refs_by_quarter[i].fadeIn();
+												}
+											}
+										} else {
+											for (i = 0; i < 4; i++) {
+												if (i !== active_quarter) {
+													refs_by_quarter[i].fadeIn();
+												}
+											}
+										}
+									});
+								});
 							}
 						});
 					}
@@ -322,7 +407,7 @@
 			// HTML and CSS snippets
 			zapi.loading_indicator_styles = '.spinner { display: none; position: absolute; left: 45%; width: 50px; height: 30px; text-align: center; font-size: 10px; } body.' + zapi.loading_class + ' .spinner { display: block; } .spinner > div { background-color: #333; height: 100%; width: 6px; margin: 0 1px; display: inline-block;  -webkit-animation: stretchdelay 1.2s infinite ease-in-out; animation: stretchdelay 1.2s infinite ease-in-out; } .spinner .rect2 { -webkit-animation-delay: -1.1s; animation-delay: -1.1s; } .spinner .rect3 { -webkit-animation-delay: -1.0s; animation-delay: -1.0s; } .spinner .rect4 { -webkit-animation-delay: -0.9s; animation-delay: -0.9s; } .spinner .rect5 { -webkit-animation-delay: -0.8s; animation-delay: -0.8s; } @-webkit-keyframes stretchdelay { 0%, 40%, 100% { -webkit-transform: scaleY(0.4) } 20% { -webkit-transform: scaleY(1.0) } } @keyframes stretchdelay { 0%, 40%, 100% { transform: scaleY(0.4); -webkit-transform: scaleY(0.4); } 20% {  transform: scaleY(1.0); -webkit-transform: scaleY(1.0); } }';
 			zapi.loading_indicator_html   = '<div class="spinner"><div class="rect1"></div><div class="rect2"></div><div class="rect3"></div><div class="rect4"></div><div class="rect5"></div></div>';
-			zapi.year_heading_styles      = '#boot .' + zapi.year_section_class + ' > h2 { margin-top: 20px; } #boot .' + zapi.year_section_class + '.first > h2 { margin-top: 0; } #boot .' + zapi.year_section_class + ' > h6 { margin-top: 1em; }';
+			zapi.year_heading_styles      = '#boot .' + zapi.year_section_class + ' h2 { margin-top: 20px; } #boot .' + zapi.year_section_class + '.first h2 { margin-top: 0; } #boot .' + zapi.year_section_class + ' h6 { margin-top: 1em; }';
 			zapi.year_filter_html         = '<nav class="year-filter c-accordion"><div class="item"><span class="group"><h3>Archive <div class="arrow"></div></h3>' + zapi.loading_indicator_html + '</span></div></nav>';
 			zapi.year_filter_styles       = '<%= filter_nav_css %>';
 		},
