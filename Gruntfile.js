@@ -74,6 +74,15 @@ module.exports = function (grunt) {
 						return grunt.template.process(content, {data: template_data});
 					}
 				}
+			},
+			uglify_alternative: {
+				files: [
+					{
+						src    : '<%= copy.zapi.files[0].dest %>',
+						dest   : '<%= uglify.dist.dest %>',
+						filter : 'isFile'
+					}
+				]
 			}
 		},
 		// Sart a web server
@@ -118,6 +127,14 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-contrib-clean');
 
 	// Default task
-	grunt.registerTask('default', ['cssmin', 'copy', 'jshint', 'uglify', 'clean', 'connect', 'watch']);
+	grunt.registerTask('default', ['cssmin', 'copy:zapi', 'jshint', 'uglify', 'clean', 'connect', 'watch']);
+	
+	// Debug task (no uglification)
+	grunt.registerTask('debug', 'Run build tasks sans ugification for easier debugging', function() {
+		var watch_tasks = grunt.config('watch.zapi.tasks');
+		watch_tasks.splice(watch_tasks.indexOf('uglify:dist'), 1, 'copy:uglify_alternative');
+		grunt.config('watch.zapi.tasks', watch_tasks);
+		grunt.task.run(['cssmin', 'copy:zapi', 'jshint', 'copy:uglify_alternative', 'clean', 'connect', 'watch']);
+	});
 };
 
