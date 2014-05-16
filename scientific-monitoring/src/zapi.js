@@ -128,6 +128,11 @@
 				url: feed_url,
 				dataType: 'jsonp',
 				success: function(resp) {
+					// Do we have a good response? If not, lets try again
+					if (!resp.responseData || !resp.responseData.xmlString) {
+						zapi.getReferences();
+						return false;
+					}
 					var // Structure of resp: resp.responseData.feed.entries[]
 						$feed       = $($.parseXML(resp.responseData.xmlString)),
 						$entries    = $feed.find('entry'),
