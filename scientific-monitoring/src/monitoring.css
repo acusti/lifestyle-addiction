@@ -1,8 +1,8 @@
 .year-filter {
-	width: 30%;
-	min-width: 160px;
+	width: 24%;
+	min-width: 145px;
 	float: right;
-	margin-bottom: 0.5em;
+	margin: 0 0 0.5em 0.25em;
 }
 .year-filter .item {
 	position: relative;
@@ -24,6 +24,7 @@ body.loading-references .year-filter.active .item {
 	margin: 1em auto;
 }
 .year-filter h3 {
+	position: relative;
 	cursor: pointer;
 }
 .year-filter h6 a {
@@ -31,7 +32,7 @@ body.loading-references .year-filter.active .item {
 	padding: 0.2em 1em;
 }
 .year-filter h6 a:hover,
-.quarter-filter:hover {
+.quarter-filter.is-enabled:hover {
 	background: rgb(240, 240, 240);
 	cursor: pointer;
 }
@@ -48,7 +49,19 @@ body.loading-references .year-filter.active .item {
 	/* Match the line height of the h2 */
 	line-height: 42px;
 }
-.year-section.first .quarters {
+/* Year section styles */
+#boot .year-section h2 {
+	margin-top: 20px;
+}
+#boot .year-section.first h2,
+#boot.filtered .year-section h2 {
+	margin-top: 0;
+}
+#boot .year-section h6 {
+	margin-top: 1em;
+}
+.year-section.first .quarters,
+.filtered .year-section .quarters {
 	margin-top: 0;
 }
 .quarter-filter {
@@ -57,6 +70,15 @@ body.loading-references .year-filter.active .item {
 	font-size: 13px;
 	padding: 0.25em 0.35em;
 	margin: 0 0.25em;
+	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+	filter: alpha(opacity=50);
+	opacity: 0.5;
+}
+.quarter-filter.is-enabled {
+	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
+	filter: alpha(opacity=100);
+	opacity: 1;
+
 }
 h2.quarterly {
 	float: left;

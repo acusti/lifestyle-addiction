@@ -26,7 +26,7 @@
 		$year_sections : $(),
 		// Labels for quarter-year filters
 		quarter_labels  : [
-			'Jan - April',
+			'Jan - Mar',
 			'April - June',
 			'July - Sept',
 			'Oct - Dec'
@@ -43,14 +43,11 @@
 		all_loaded : false,
 		// Class to add to body when loading references
 		loading_class      : 'loading-references',
-		// Class to add to year sections
-		year_section_class : 'year-section',
 		// HTML and CSS snippets
 		loading_indicator_styles : '',
 		loading_indicator_html   : '',
-		year_heading_styles      : '',
+		monitoring_css           : '<%= monitoring_css %>',
 		year_filter_html         : '',
-		year_filter_styles       : '',
 		// Set the correct height of the tab iframe
 		tab_height_timeout: '',
 		fixTabHeight: function() {
@@ -110,7 +107,7 @@
 			
 			// Check if the iframe has our styles yet
 			if (!zapi.$body.hasClass('ready')) {
-				$(document).find('head').append('<style>' + zapi.year_heading_styles + '\n' + zapi.loading_indicator_styles + '\n' + zapi.year_filter_styles + '</style>');
+				$(document).find('head').append('<style>' + zapi.monitoring_css + '\n' + zapi.loading_indicator_styles + '</style>');
 				zapi.$body.addClass('ready');
 			}
 
@@ -176,7 +173,7 @@
 							if (zapi.years.length && ref_html.length) {
 								ref_html += '</div>';
 							}
-							year_class = zapi.year_section_class + ' ' + the_year;
+							year_class = 'year-section ' + the_year;
 							// If this is the very first year, add .first class
 							if (!zapi.years.length) {
 								year_class += ' first';
@@ -193,7 +190,7 @@
 							the_month = new Date(entry.date);
 							the_month = the_month.getMonth();
 							if (isNaN(the_month)) {
-								// Default to the first month
+								// If Date() failed to parse the_month string, default to first month
 								the_month = 0;
 							}
 							entry_class += ' year-' + the_year + ' quarter-' + Math.floor(the_month / 3);
@@ -256,7 +253,7 @@
 							zapi.$body.off('click.year-filter.' + zapi.collection_name).on('click.year-filter.' + zapi.collection_name, '.year-filter', zapi.yearFilterToggle);
 							zapi.$body.off('click.year-filter.' + zapi.collection_name).on('click.year-filter.' + zapi.collection_name, '.year-filter h3', zapi.yearFilterTitleToggle);
 							// Set up year section element cache
-							zapi.$year_sections = zapi.$body.find('.' + zapi.year_section_class);
+							zapi.$year_sections = zapi.$body.find('.year-section');
 							// Build years list
 							for (; i < len; i++) {
 								if (zapi.years[i].length) {
@@ -312,26 +309,30 @@
 									var $year_title = $(this),
 										the_year = this.innerHTML,
 										quarters,
+										quarter_class,
 										$quarters,
-										refs_by_quarter = [];
+										refs_by_quarter = [],
+										i;
 									
 									if (!the_year.length) {
 										return;
 									}
 									quarters = '<div class="quarters">';
 									
-									for (var i = 0; i < 4; i++) {
-										refs_by_quarter[i] = zapi.$body.find('.' + zapi.year_section_class + '.' + the_year + ' .quarter-' + i);
+									for (i = 0; i < 4; i++) {
+										quarter_class = 'quarter-filter';
+										refs_by_quarter[i] = zapi.$body.find('.year-section.' + the_year + ' .quarter-' + i);
 										if (refs_by_quarter[i].length) {
-											quarters += '<span class="quarter-filter" data-quarter="' + i + '">' + zapi.quarter_labels[i] + '</span>';
+											quarter_class += ' is-enabled';
 										}
+										quarters += '<span class="' + quarter_class + '" data-quarter="' + i + '">' + zapi.quarter_labels[i] + '</span>';
 									}
 									
 									quarters += '</div>';
 									
 									$year_title.addClass('quarterly');
 									$quarters = $(quarters).insertAfter($year_title);
-									$quarters.on('click', '.quarter-filter', function() {
+									$quarters.on('click', '.quarter-filter.is-enabled', function() {
 										var $filter = $(this),
 											active_quarter = '',
 											i;
@@ -412,9 +413,7 @@
 			// HTML and CSS snippets
 			zapi.loading_indicator_styles = '.spinner { display: none; position: absolute; left: 45%; width: 50px; height: 30px; text-align: center; font-size: 10px; } body.' + zapi.loading_class + ' .spinner { display: block; } .spinner > div { background-color: #333; height: 100%; width: 6px; margin: 0 1px; display: inline-block;  -webkit-animation: stretchdelay 1.2s infinite ease-in-out; animation: stretchdelay 1.2s infinite ease-in-out; } .spinner .rect2 { -webkit-animation-delay: -1.1s; animation-delay: -1.1s; } .spinner .rect3 { -webkit-animation-delay: -1.0s; animation-delay: -1.0s; } .spinner .rect4 { -webkit-animation-delay: -0.9s; animation-delay: -0.9s; } .spinner .rect5 { -webkit-animation-delay: -0.8s; animation-delay: -0.8s; } @-webkit-keyframes stretchdelay { 0%, 40%, 100% { -webkit-transform: scaleY(0.4) } 20% { -webkit-transform: scaleY(1.0) } } @keyframes stretchdelay { 0%, 40%, 100% { transform: scaleY(0.4); -webkit-transform: scaleY(0.4); } 20% {  transform: scaleY(1.0); -webkit-transform: scaleY(1.0); } }';
 			zapi.loading_indicator_html   = '<div class="spinner"><div class="rect1"></div><div class="rect2"></div><div class="rect3"></div><div class="rect4"></div><div class="rect5"></div></div>';
-			zapi.year_heading_styles      = '#boot .' + zapi.year_section_class + ' h2 { margin-top: 20px; } #boot .' + zapi.year_section_class + '.first h2 { margin-top: 0; } #boot .' + zapi.year_section_class + ' h6 { margin-top: 1em; }';
 			zapi.year_filter_html         = '<nav class="year-filter c-accordion"><div class="item"><span class="group"><h3>Archive <div class="arrow"></div></h3>' + zapi.loading_indicator_html + '</span></div></nav>';
-			zapi.year_filter_styles       = '<%= filter_nav_css %>';
 		},
 		loadYearFilterList: function(evt) {
 			evt.stopPropagation();
@@ -477,12 +476,6 @@
 			}
 		}
 	};
-
-	// Suggested approach
-	// 1. Parse responseData.xmlString of response into a document tree and wrap it with jQuery
-	// var $resp = $($.parseXML(resp.responseData.xmlString));
-	// 2. Loop through the entries using .each(); if necessary, fall back to the JSON using resp.responseData.feed.entries[idx] (shouldn't be necessary)
-	// $resp.find('entry').each(function(idx) {});
 
 	// Export our Zotero API handler
 	window.zotero_api = zapi;

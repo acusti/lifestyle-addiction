@@ -46,9 +46,9 @@ module.exports = function (grunt) {
 			}
 		},
 		cssmin: {
-			filternav: {
-				src  : 'scientific-monitoring/src/year-filter-nav.css',
-				dest : 'scientific-monitoring/year-filter-nav.min.css'
+			monitoring: {
+				src  : 'scientific-monitoring/src/monitoring.css',
+				dest : 'scientific-monitoring/monitoring.min.css'
 			}
 		},
 		copy: {
@@ -65,9 +65,9 @@ module.exports = function (grunt) {
 						var // Get nodejs FileSystem module
 							fs = require('fs'),
 							// Get the contents of the minified CSS
-							filter_nav_css = fs.readFileSync(grunt.config.get('cssmin.filternav.dest')).toString(),
+							monitoring_css = fs.readFileSync(grunt.config.get('cssmin.monitoring.dest')).toString(),
 							template_data = {
-								'filter_nav_css': filter_nav_css
+								'monitoring_css': monitoring_css
 							};
 						
 						// Run the file through grunt's template engine
@@ -102,7 +102,7 @@ module.exports = function (grunt) {
 			zapi: {
 				files: [
 					'<%= copy.zapi.files[0].src %>',
-					'<%= cssmin.filternav.src %>'
+					'<%= cssmin.monitoring.src %>'
 				],
 				tasks: ['cssmin', 'copy', 'jshint:zapi', 'uglify:dist', 'clean']
 			}
@@ -111,7 +111,7 @@ module.exports = function (grunt) {
 			transients: {
 				src: [
 					'<%= uglify.dist.src %>',
-					'<%= cssmin.filternav.dest %>'
+					'<%= cssmin.monitoring.dest %>'
 				]
 			}
 		}
