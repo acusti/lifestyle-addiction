@@ -104,7 +104,7 @@
 					zapi.callback = callback;
 				}
 				// Special logic for language
-				if (window.location.pathname.substr(1).split('/').shift() === 'fr') {
+				if (parent.window.location.pathname.substr(1).split('/').shift() === 'fr') {
 					zapi.lang = 'fr';
 				}
 			}
