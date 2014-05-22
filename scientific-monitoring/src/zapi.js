@@ -15,6 +15,7 @@
 		collection_name : window.location.pathname.split('/').pop().replace('archive-', '').replace('monitoring-', '').replace('.html', ''),
 		feed_base       : 'https://api.zotero.org/users/',
 		namespace       : 'zapi\\:',
+		lang            : 'en',
 		// @todo try fetching xml nodes with namespace prefix; if it doesn't work, set namespace prefix to ''
 		// Element cache (careful with using string selectors with this jQuery; it will search the parent DOM)
 		$body          : $(document.body),
@@ -25,12 +26,20 @@
 		$year_links    : $(),
 		$year_sections : $(),
 		// Labels for quarter-year filters
-		quarter_labels  : [
-			'Jan - Mar',
-			'April - June',
-			'July - Sept',
-			'Oct - Dec'
-		],
+		quarter_labels  : {
+			'en': [
+				'Jan - Mar',
+				'April - June',
+				'July - Sept',
+				'Oct - Dec'
+			],
+			'fr': [
+				'Jan - Mars',
+				'Avril - Juin',
+				'Juil - Sept',
+				'Oct - Dec'
+			]
+		},
 		// An array of years of the references (for archive page)
 		years      : [],
 		// Total number of references
@@ -93,6 +102,10 @@
 				zapi.buildParams(options);
 				if (callback) {
 					zapi.callback = callback;
+				}
+				// Special logic for language
+				if (window.location.pathname.substr(1).split('/').shift() === 'fr') {
+					zapi.lang = 'fr';
 				}
 			}
 			if (zapi.is_init) {
@@ -325,7 +338,7 @@
 										if (refs_by_quarter[i].length) {
 											quarter_class += ' is-enabled';
 										}
-										quarters += '<span class="' + quarter_class + '" data-quarter="' + i + '">' + zapi.quarter_labels[i] + '</span>';
+										quarters += '<span class="' + quarter_class + '" data-quarter="' + i + '">' + zapi.quarter_labels[zapi.lang][i] + '</span>';
 									}
 									
 									quarters += '</div>';
