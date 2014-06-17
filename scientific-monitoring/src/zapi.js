@@ -80,6 +80,9 @@
 		},
 		buildParams: function(options) {
 			zapi.params = $.extend({}, zapi.defaults, options);
+			if (zapi.params.quarterly) {
+				zapi.params.num_entries = 99;
+			}
 		},
 		getFeedUrl: function() {
 			var feed_url = zapi.feed_base;
@@ -403,9 +406,9 @@
 			}
 			zapi.params.start += zapi.params.num_entries;
 			
-			// If this is the first time calling getNextReferences, adjust num_entries to 50
+			// If this is the first time calling getNextReferences, adjust num_entries to max
 			if (zapi.params.start === zapi.params.num_entries) {
-				zapi.params.num_entries = 50;
+				zapi.params.num_entries = 99;
 			}
 			
 			// If not load_all, add a handler to the parent window to load the next set of results
