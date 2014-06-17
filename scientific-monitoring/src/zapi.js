@@ -139,23 +139,25 @@
 			// Add loading references class
 			zapi.$parent_body.addClass(zapi.loading_class);
 			$.ajax({
-				url: feed_url,
-				dataType: 'jsonp',
-				success: function(resp) {
+				url      : feed_url,
+				dataType : 'jsonp',
+				success  : function(resp) {
 					// Do we have a good response? If not, lets try again
 					if (!resp.responseData || !resp.responseData.xmlString) {
 						zapi.getReferences();
 						return false;
 					}
 					var // Structure of resp: resp.responseData.feed.entries[]
-						$feed       = $($.parseXML(resp.responseData.xmlString)),
-						$entries    = $feed.find('entry'),
-						len         = $entries.length,
-						i           = 0,
-						ref_html    = '',
-						the_year    = '',
-						year_class  = '',
-						is_new_year = false,
+						$feed            = $($.parseXML(resp.responseData.xmlString)),
+						$entries         = $feed.find('entry'),
+						len              = $entries.length,
+						i                = 0,
+						ref_html         = '',
+						the_year         = '',
+						year_class       = '',
+						year_title_class = '',
+						is_new_year      = false,
+						qtr_idx,
 						the_month,
 						$entry,
 						$bib,
@@ -173,7 +175,12 @@
 							zapi.namespace = '';
 							zapi.total = $feed.find(zapi.namespace + 'totalResults');
 						}
-						zapi.total = parseInt(zapi.total.text(), 10);
+						// If we found it, set it. Otherwise, keep zapi.total as false
+						if (zapi.total.length) {
+							zapi.total = parseInt(zapi.total.text(), 10);
+						} else {
+							zapi.total = false;
+						}
 					}
 					for (; i < len; i++) {
 						$entry = $($entries[i]);
@@ -185,7 +192,7 @@
 						the_year = $entry.find(zapi.namespace + 'year').text();
 						is_new_year = zapi.years[zapi.years.length - 1] !== the_year;
 						// Is it a new year section or the first of this group of references
-						if (!ref_html.length || is_new_year) {
+						if ((!ref_html.length || is_new_year) && the_year) {
 							// If this is not the first year header and not the first of this group of references, close the previous year div
 							if (zapi.years.length && ref_html.length) {
 								ref_html += '</div>';
@@ -198,8 +205,23 @@
 							ref_html += '<div class="' + year_class + '">';
 							// If first of this year, add heading and push year onto years array
 							if (is_new_year) {
-								ref_html += '<h2 id="year-' + the_year + '">' + the_year + '</h2>';
+								if (zapi.params.quarterly) {
+									year_title_class = ' class="quarterly"';
+								}
+								ref_html += '<h2 id="year-' + the_year + '"' + year_title_class + '>' + the_year + '</h2>';
 								zapi.years.push(the_year);
+								// If is quarterly, add quarters
+								if (zapi.params.quarterly) {
+									ref_html += '<div class="quarters">';
+									for (qtr_idx = 0; qtr_idx < 4; qtr_idx++) {
+										ref_html += '<span class="quarter-filter" data-quarter="' + qtr_idx + '">' + zapi.quarter_labels[qtr_idx] + '</span>';
+									}
+									ref_html += '</div>';
+								}
+								// If there is a previous year, process it for quarterly
+								if (zapi.years.length > 1) {
+									zapi.setupQuarterFilters(zapi.years[zapi.years.length - 1]);
+								}
 							}
 						}
 						// Quarterly logic requires the date also
@@ -320,62 +342,6 @@
 									zapi.$window.trigger('resize.tabs.' + zapi.collection_name);
 								}, 500);
 							}
-							// Now set up quarter filters, if applicable
-							if (zapi.params.quarterly) {
-								zapi.$body.find('h2').each(function() {
-									var $year_title = $(this),
-										the_year = this.innerHTML,
-										quarters,
-										quarter_class,
-										$quarters,
-										refs_by_quarter = [],
-										i;
-									
-									if (!the_year.length) {
-										return;
-									}
-									quarters = '<div class="quarters">';
-									
-									for (i = 0; i < 4; i++) {
-										quarter_class = 'quarter-filter';
-										refs_by_quarter[i] = zapi.$body.find('.year-section.' + the_year + ' .quarter-' + i);
-										if (refs_by_quarter[i].length) {
-											quarter_class += ' is-enabled';
-										}
-										quarters += '<span class="' + quarter_class + '" data-quarter="' + i + '">' + zapi.quarter_labels[zapi.lang][i] + '</span>';
-									}
-									
-									quarters += '</div>';
-									
-									$year_title.addClass('quarterly');
-									$quarters = $(quarters).insertAfter($year_title);
-									$quarters.on('click', '.quarter-filter.is-enabled', function() {
-										var $filter = $(this),
-											active_quarter = '',
-											i;
-										// No other quarter links should be active
-										$quarters.find('.quarter-filter').not($filter).removeClass('active');
-										$filter.toggleClass('active');
-										
-										if ($filter.hasClass('active')) {
-											active_quarter = parseInt($filter.data('quarter'), 10);
-											for (i = 0; i < 4; i++) {
-												if (i !== active_quarter) {
-													refs_by_quarter[i].fadeOut();
-												} else {
-													refs_by_quarter[i].fadeIn();
-												}
-											}
-										} else {
-											for (i = 0; i < 4; i++) {
-												if (i !== active_quarter) {
-													refs_by_quarter[i].fadeIn();
-												}
-											}
-										}
-									});
-								});
-							}
 						});
 					}
 					zapi.is_init = false;
@@ -385,9 +351,11 @@
 					zapi.$window.on('resize.tabs.' + zapi.collection_name, zapi.fixTabHeight).trigger('resize.tabs.' + zapi.collection_name);
 					
 					// If we have not yet loaded all the references, set up fetching of the next set of references
-					if (zapi.params.start + zapi.params.num_entries < zapi.total) {
+					// Add check to make sure we have a valid total, and if not, try to fetch the next set
+					if (zapi.total === false || zapi.params.start + zapi.params.num_entries < zapi.total) {
 						zapi.getNextReferences();
 					} else {
+						zapi.setupQuarterFilters(the_year);
 						zapi.all_loaded = true;
 						zapi.$body.trigger('references-load.' + zapi.collection_name);
 					}
@@ -502,6 +470,65 @@
 				$year_filter.removeClass('active');
 				$year_filter.find('.item').removeClass('open');
 			}
+		},
+		setupQuarterFilters: function() {
+			if (!zapi.params.quarterly) {
+				return;
+			}
+			// Set up quarter filters, if applicable
+			zapi.$body.find('h2').each(function() {
+				var $year_title = $(this),
+					the_year = this.innerHTML,
+					quarters,
+					quarter_class,
+					$quarters,
+					refs_by_quarter = [],
+					i;
+				
+				if (!the_year.length) {
+					return;
+				}
+				quarters = '<div class="quarters">';
+				
+				for (i = 0; i < 4; i++) {
+					quarter_class = 'quarter-filter';
+					refs_by_quarter[i] = zapi.$body.find('.year-section.' + the_year + ' .quarter-' + i);
+					if (refs_by_quarter[i].length) {
+						quarter_class += ' is-enabled';
+					}
+					quarters += '<span class="' + quarter_class + '" data-quarter="' + i + '">' + zapi.quarter_labels[zapi.lang][i] + '</span>';
+				}
+				
+				quarters += '</div>';
+				
+				$year_title.addClass('quarterly');
+				$quarters = $(quarters).insertAfter($year_title);
+				$quarters.on('click', '.quarter-filter.is-enabled', function() {
+					var $filter = $(this),
+						active_quarter = '',
+						i;
+					// No other quarter links should be active
+					$quarters.find('.quarter-filter').not($filter).removeClass('active');
+					$filter.toggleClass('active');
+					
+					if ($filter.hasClass('active')) {
+						active_quarter = parseInt($filter.data('quarter'), 10);
+						for (i = 0; i < 4; i++) {
+							if (i !== active_quarter) {
+								refs_by_quarter[i].fadeOut();
+							} else {
+								refs_by_quarter[i].fadeIn();
+							}
+						}
+					} else {
+						for (i = 0; i < 4; i++) {
+							if (i !== active_quarter) {
+								refs_by_quarter[i].fadeIn();
+							}
+						}
+					}
+				});
+			});
 		}
 	};
 
