@@ -8,7 +8,8 @@
 			// Number of entries to fetch
 			num_entries    : 20,
 			start          : 0,
-			zotero_options : 'format=atom&content=json,bib&style=apa&order=date&sort=desc'
+			zotero_options : 'format=atom&content=json,bib&style=apa&order=date&sort=desc',
+			ip             : false
 		},
 		params          : {},
 		callback        : {},
@@ -93,7 +94,7 @@
 				feed_url += '&q=' + zapi.params.q + '&qmode=titleCreatorYear';
 			}
 			// Build the google feed api url and return it
-			return 'https://ajax.googleapis.com/ajax/services/feed/load?v=1.0&output=xml&num=' + zapi.params.num_entries + '&q=' + encodeURIComponent(feed_url);
+			return 'https://ajax.googleapis.com/ajax/services/feed/load?v=1.0&output=xml&num=' + zapi.params.num_entries + (zapi.params.ip ? '&userip=' + zapi.params.ip : '') + '&q=' + encodeURIComponent(feed_url);
 		},
 		getReferences: function(options, callback) {
 			// If we have options (like on first load), use them
@@ -109,7 +110,7 @@
 				}
 			}
 			if (zapi.is_init) {
-				zapi.prepareMarkup();
+				zapi.initialize();
 			}
 			// If all references are already loaded, return
 			if (zapi.all_loaded) {
@@ -421,6 +422,17 @@
 			} else {
 				zapi.getReferences();
 			}
+		},
+		initialize: function() {
+			zapi.prepareMarkup();
+			// Get current ip address for google API calls
+			$.ajax({
+				url      : 'http://jsonip.appspot.com/',
+				dataType : 'jsonp',
+				success  : function(resp) {
+					zapi.param.ip = resp.ip;
+				}
+			});
 		},
 		prepareMarkup: function() {
 			// HTML and CSS snippets
