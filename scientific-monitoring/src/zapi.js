@@ -2,7 +2,7 @@
 	var zapi, js_plugin_src;
 
 	zapi = {
-		defaults : {
+		defaults        : {
 			collection     : '',
 			user           : '1562960',
 			// Number of entries to fetch
@@ -19,13 +19,13 @@
 		lang            : 'en',
 		// @todo try fetching xml nodes with namespace prefix; if it doesn't work, set namespace prefix to ''
 		// Element cache (careful with using string selectors with this jQuery; it will search the parent DOM)
-		$body          : $(document.body),
-		$window        : $(window),
-		$parent_body   : $('body'),
-		$footer        : $('.c-back-to-top'),
-		$year_filter   : $(),
-		$year_links    : $(),
-		$year_sections : $(),
+		$body           : $(document.body),
+		$window         : $(window),
+		$parent_body    : $('body'),
+		$footer         : $('.c-back-to-top'),
+		$year_filter    : $(),
+		$year_links     : $(),
+		$year_sections  : $(),
 		// Labels for quarter-year filters
 		quarter_labels  : {
 			'en': [
@@ -52,7 +52,7 @@
 		// Flag for keeping track if all references have been loaded
 		all_loaded : false,
 		// Class to add to body when loading references
-		loading_class      : 'loading-references',
+		loading_class            : 'loading-references',
 		// HTML and CSS snippets
 		loading_indicator_styles : '',
 		loading_indicator_html   : '',
