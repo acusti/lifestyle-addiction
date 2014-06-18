@@ -148,15 +148,16 @@
 						return false;
 					}
 					var // Structure of resp: resp.responseData.feed.entries[]
-						$feed            = $($.parseXML(resp.responseData.xmlString)),
-						$entries         = $feed.find('entry'),
-						len              = $entries.length,
-						i                = 0,
-						ref_html         = '',
-						the_year         = '',
-						year_class       = '',
-						year_title_class = '',
-						is_new_year      = false,
+						$feed             = $($.parseXML(resp.responseData.xmlString)),
+						$entries          = $feed.find('entry'),
+						len               = $entries.length,
+						i                 = 0,
+						ref_html          = '',
+						the_year          = '',
+						year_class        = '',
+						year_title_class  = '',
+						is_new_year       = false,
+						is_quarters_ready = false,
 						qtr_idx,
 						the_month,
 						$entry,
@@ -214,13 +215,14 @@
 								if (zapi.params.quarterly) {
 									ref_html += '<div class="quarters">';
 									for (qtr_idx = 0; qtr_idx < 4; qtr_idx++) {
-										ref_html += '<span class="quarter-filter" data-quarter="' + qtr_idx + '">' + zapi.quarter_labels[qtr_idx] + '</span>';
+
+										ref_html += '<span class="quarter-filter" data-quarter="' + qtr_idx + '">' + zapi.quarter_labels[zapi.lang][qtr_idx] + '</span>';
 									}
 									ref_html += '</div>';
 								}
 								// If there is a previous year, process it for quarterly
 								if (zapi.years.length > 1) {
-									zapi.setupQuarterFilters(zapi.years[zapi.years.length - 1]);
+									is_quarters_ready = true;
 								}
 							}
 						}
@@ -359,6 +361,10 @@
 						zapi.all_loaded = true;
 						zapi.$body.trigger('references-load.' + zapi.collection_name);
 					}
+					// Quarter filter setup
+					if (is_quarters_ready) {
+						zapi.setupQuarterFilters(zapi.years[zapi.years.length - 2]);
+					}
 				}
 			});
 		},
@@ -401,7 +407,7 @@
 				url      : 'http://jsonip.appspot.com/',
 				dataType : 'jsonp',
 				success  : function(resp) {
-					zapi.param.ip = resp.ip;
+					zapi.params.ip = resp.ip;
 				}
 			});
 		},
@@ -471,39 +477,24 @@
 				$year_filter.find('.item').removeClass('open');
 			}
 		},
-		setupQuarterFilters: function() {
+		setupQuarterFilters: function(the_year) {
 			if (!zapi.params.quarterly) {
 				return;
 			}
 			// Set up quarter filters, if applicable
-			zapi.$body.find('h2').each(function() {
-				var $year_title = $(this),
-					the_year = this.innerHTML,
-					quarters,
-					quarter_class,
-					$quarters,
+			zapi.$body.find('.year-section.' + the_year + ' .quarters').each(function() {
+				var $quarters = $(this),
 					refs_by_quarter = [],
 					i;
 				
-				if (!the_year.length) {
-					return;
-				}
-				quarters = '<div class="quarters">';
-				
 				for (i = 0; i < 4; i++) {
-					quarter_class = 'quarter-filter';
 					refs_by_quarter[i] = zapi.$body.find('.year-section.' + the_year + ' .quarter-' + i);
 					if (refs_by_quarter[i].length) {
-						quarter_class += ' is-enabled';
+						$quarters.find('[data-quarter="' + i +'"]').addClass('is-enabled');
 					}
-					quarters += '<span class="' + quarter_class + '" data-quarter="' + i + '">' + zapi.quarter_labels[zapi.lang][i] + '</span>';
 				}
 				
-				quarters += '</div>';
-				
-				$year_title.addClass('quarterly');
-				$quarters = $(quarters).insertAfter($year_title);
-				$quarters.on('click', '.quarter-filter.is-enabled', function() {
+				$quarters.find('.quarter-filter.is-enabled').on('click', function() {
 					var $filter = $(this),
 						active_quarter = '',
 						i;
