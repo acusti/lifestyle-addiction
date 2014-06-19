@@ -157,7 +157,7 @@
 						year_class        = '',
 						year_title_class  = '',
 						is_new_year       = false,
-						is_quarters_ready = false,
+						years_for_quarters = [],
 						qtr_idx,
 						the_month,
 						$entry,
@@ -222,7 +222,7 @@
 								}
 								// If there is a previous year, process it for quarterly
 								if (zapi.years.length > 1) {
-									is_quarters_ready = true;
+									years_for_quarters.push(zapi.years[zapi.years.length - 2]);
 								}
 							}
 						}
@@ -357,13 +357,14 @@
 					if (zapi.total === false || zapi.params.start + zapi.params.num_entries < zapi.total) {
 						zapi.getNextReferences();
 					} else {
-						zapi.setupQuarterFilters(the_year);
+						// We have finished, so we can process the last year's quarter filters
+						years_for_quarters.push(the_year);
 						zapi.all_loaded = true;
 						zapi.$body.trigger('references-load.' + zapi.collection_name);
 					}
 					// Quarter filter setup
-					if (is_quarters_ready) {
-						zapi.setupQuarterFilters(zapi.years[zapi.years.length - 2]);
+					if (years_for_quarters.length) {
+						zapi.setupQuarterFilters(years_for_quarters);
 					}
 				}
 			});
@@ -477,49 +478,60 @@
 				$year_filter.find('.item').removeClass('open');
 			}
 		},
-		setupQuarterFilters: function(the_year) {
-			if (!zapi.params.quarterly) {
+		setupQuarterFilters: function(the_years) {
+			var i   = 0,
+				len = the_years.length,
+				$quarters,
+				refs_by_quarter,
+				qtr_idx;
+
+			if (!zapi.params.quarterly || !len) {
 				return;
 			}
 			// Set up quarter filters, if applicable
-			zapi.$body.find('.year-section.' + the_year + ' .quarters').each(function() {
-				var $quarters = $(this),
-					refs_by_quarter = [],
-					i;
-				
-				for (i = 0; i < 4; i++) {
-					refs_by_quarter[i] = zapi.$body.find('.year-section.' + the_year + ' .quarter-' + i);
-					if (refs_by_quarter[i].length) {
-						$quarters.find('[data-quarter="' + i +'"]').addClass('is-enabled');
+			for (; i < len; i++) {
+				$quarters       = zapi.$body.find('.year-section.' + the_years[i] + ' .quarters');
+				refs_by_quarter = [];
+				qtr_idx         = 0;
+
+				if (!$quarters.length) {
+					continue;
+				}
+				for (; qtr_idx < 4; qtr_idx++) {
+					refs_by_quarter[qtr_idx] = zapi.$body.find('.year-section.' + the_years[i] + ' .quarter-' + qtr_idx);
+					if (refs_by_quarter[qtr_idx].length) {
+						$quarters.find('[data-quarter="' + qtr_idx +'"]').addClass('is-enabled');
 					}
 				}
+				$quarters.find('.quarter-filter.is-enabled').on('click', zapi.makeQuarterFilterToggle($quarters, refs_by_quarter));
+			}
+		},
+		makeQuarterFilterToggle: function($quarters, refs_by_quarter) {
+			return function() {
+				var $filter = $(this),
+					active_quarter = '',
+					i;
+				// No other quarter links should be active
+				$quarters.find('.quarter-filter').not($filter).removeClass('active');
+				$filter.toggleClass('active');
 				
-				$quarters.find('.quarter-filter.is-enabled').on('click', function() {
-					var $filter = $(this),
-						active_quarter = '',
-						i;
-					// No other quarter links should be active
-					$quarters.find('.quarter-filter').not($filter).removeClass('active');
-					$filter.toggleClass('active');
-					
-					if ($filter.hasClass('active')) {
-						active_quarter = parseInt($filter.data('quarter'), 10);
-						for (i = 0; i < 4; i++) {
-							if (i !== active_quarter) {
-								refs_by_quarter[i].fadeOut();
-							} else {
-								refs_by_quarter[i].fadeIn();
-							}
-						}
-					} else {
-						for (i = 0; i < 4; i++) {
-							if (i !== active_quarter) {
-								refs_by_quarter[i].fadeIn();
-							}
+				if ($filter.hasClass('active')) {
+					active_quarter = parseInt($filter.data('quarter'), 10);
+					for (i = 0; i < 4; i++) {
+						if (i !== active_quarter) {
+							refs_by_quarter[i].fadeOut();
+						} else {
+							refs_by_quarter[i].fadeIn();
 						}
 					}
-				});
-			});
+				} else {
+					for (i = 0; i < 4; i++) {
+						if (i !== active_quarter) {
+							refs_by_quarter[i].fadeIn();
+						}
+					}
+				}
+			};
 		}
 	};
 
