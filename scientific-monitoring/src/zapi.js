@@ -405,7 +405,7 @@
 			zapi.prepareMarkup();
 			// Get current ip address for google API calls
 			$.ajax({
-				url      : 'http://jsonip.appspot.com/',
+				url      : 'http://www.telize.com/jsonip',
 				dataType : 'jsonp',
 				success  : function(resp) {
 					zapi.params.ip = resp.ip;
@@ -503,11 +503,11 @@
 						$quarters.find('[data-quarter="' + qtr_idx +'"]').addClass('is-enabled');
 					}
 				}
-				$quarters.find('.quarter-filter.is-enabled').on('click', zapi.makeQuarterFilterToggle($quarters, refs_by_quarter));
+				zapi.attachQuarterFilterToggle($quarters, refs_by_quarter);
 			}
 		},
-		makeQuarterFilterToggle: function($quarters, refs_by_quarter) {
-			return function() {
+		attachQuarterFilterToggle: function($quarters, refs_by_quarter) {
+			$quarters.find('.quarter-filter.is-enabled').on('mouseover', function() {
 				var $filter = $(this),
 					active_quarter = '',
 					i;
@@ -531,7 +531,8 @@
 						}
 					}
 				}
-			};
+			});
+			parent.console.log($quarters);
 		}
 	};
 
