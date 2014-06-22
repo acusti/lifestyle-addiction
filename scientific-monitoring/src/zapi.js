@@ -227,10 +227,9 @@
 						}
 						// Quarterly logic requires the date also
 						if (zapi.params.quarterly) {
-							the_month = new Date(entry.date);
-							the_month = the_month.getMonth();
-							if (isNaN(the_month)) {
-								// If Date() failed to parse the_month string, default to first month
+							the_month = zapi.strToDate(entry.date).month;
+							if (typeof the_month !== 'number') {
+								// If strToDate() failed to parse the date string, default to first month
 								the_month = 0;
 							}
 							entry_class += ' year-' + the_year + ' quarter-' + Math.floor(the_month / 3);
@@ -557,8 +556,10 @@
 		}
 	};
 
-	// Export our Zotero API handler
-	window.zotero_api = zapi;
+	// Export our Zotero API handler (it may already be defined, in which case merge it into our local zapi)
+	window.zotero_api = window.zotero_api || {};
+	// $.extend() merges 2nd object into first, modifying it, and returns the modified object
+	window.zotero_api = $.extend(zapi, window.zotero_api);
 	
 	// Attach jquery.inview to parent if not yet attached
 	if ($.event.special.inview === undefined) {
