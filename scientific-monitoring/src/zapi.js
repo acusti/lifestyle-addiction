@@ -336,12 +336,10 @@
 							// After letting year links settle, remove loading class (to enable smooth dropdown effect)
 							window.setTimeout(function() {
 								zapi.$body.removeClass(zapi.loading_class);
-							}, 50);
-							// If .year-filter is currently active, recalculate iframe height after 0.5 seconds
+							}, 200);
+							// If .year-filter is currently active, height has changed, so trigger our event
 							if (zapi.$year_filter.hasClass('active')) {
-								window.setTimeout(function() {
-									zapi.$window.trigger('resize.tabs.' + zapi.collection_name);
-								}, 500);
+								zapi.$window.trigger('change-height.tabs.' + zapi.collection_name);
 							}
 						});
 					}
@@ -410,6 +408,13 @@
 					zapi.params.ip = resp.ip;
 				}
 			});
+			// Add custom height change event handler to body
+			zapi.$window.on('change-height.tabs.' + zapi.collection_name, function() {
+				// Trigger resize tabs event after 0.5 seconds
+				window.setTimeout(function() {
+					zapi.$window.trigger('resize.tabs.' + zapi.collection_name);
+				}, 500);
+			});
 		},
 		prepareMarkup: function() {
 			// HTML and CSS snippets
@@ -445,21 +450,15 @@
 			evt.stopPropagation();
 			// Add .active/.open
 			zapi.yearFilterAddActive();
-
-			// Recalculate iframe height after 0.5 seconds
-			window.setTimeout(function() {
-				zapi.$window.trigger('resize.tabs.' + zapi.collection_name);
-			}, 500);
+			// Trigger change height
+			zapi.$window.trigger('change-height.tabs.' + zapi.collection_name);
 		},
 		yearFilterTitleToggle: function(evt) {
 			evt.stopPropagation();
 			// Toggle .active/.open
 			zapi.yearFilterToggleActive();
-			
-			// Recalculate iframe height after 0.5 seconds
-			window.setTimeout(function() {
-				zapi.$window.trigger('resize.tabs.' + zapi.collection_name);
-			}, 500);
+			// Trigger change height
+			zapi.$window.trigger('change-height.tabs.' + zapi.collection_name);
 		},
 		yearFilterAddActive: function($year_filter) {
 			$year_filter = $year_filter || zapi.$body.find('.year-filter');
@@ -530,6 +529,8 @@
 						}
 					}
 				}
+				// Trigger change height
+				zapi.$window.trigger('change-height.tabs.' + zapi.collection_name);
 			});
 		}
 	};
