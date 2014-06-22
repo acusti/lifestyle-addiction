@@ -9,14 +9,11 @@ module.exports = function (grunt) {
 		// Task configuration
 		uglify: {
 			dist: {
-				src     : '<%= copy.zapi.files[0].dest %>',
+				src     : ['<%= copy.zapi.files[0].dest %>', 'scientific-monitoring/src/str-to-date.js'],
 				dest    : 'scientific-monitoring/zapi.js',
 				options : {
 					sourceMap               : true,
-					sourceMapIncludeSources : true/*,
-					// For development mode
-					beautify                : true,
-					mangle                  : false*/
+					sourceMapIncludeSources : true
 				}
 			}
 		},
@@ -42,7 +39,7 @@ module.exports = function (grunt) {
 				src: 'Gruntfile.js'
 			},
 			zapi: {
-				src: '<%= copy.zapi.files[0].dest %>'
+				src: '<%= uglify.dist.src %>'
 			}
 		},
 		cssmin: {
@@ -74,18 +71,15 @@ module.exports = function (grunt) {
 						return grunt.template.process(content, {data: template_data});
 					}
 				}
-			},
-			uglify_alternative: {
-				files: [
-					{
-						src    : '<%= copy.zapi.files[0].dest %>',
-						dest   : '<%= uglify.dist.dest %>',
-						filter : 'isFile'
-					}
-				]
 			}
 		},
-		// Sart a web server
+		concat: {
+			uglify_alternative: {
+				src  : '<%= uglify.dist.src %>',
+				dest : '<%= uglify.dist.dest %>'
+			}
+		},
+		// Start a web server
 		connect: {
 			server: {
 				options: {
@@ -102,6 +96,7 @@ module.exports = function (grunt) {
 			zapi: {
 				files: [
 					'<%= copy.zapi.files[0].src %>',
+					'scientific-monitoring/src/str-to-date.js',
 					'<%= cssmin.monitoring.src %>'
 				],
 				tasks: ['cssmin', 'copy', 'jshint:zapi', 'uglify:dist', 'clean']
@@ -110,7 +105,7 @@ module.exports = function (grunt) {
 		clean: {
 			transients: {
 				src: [
-					'<%= uglify.dist.src %>',
+					'<%= copy.zapi.files[0].dest %>',
 					'<%= cssmin.monitoring.dest %>'
 				]
 			}
@@ -122,6 +117,7 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-contrib-cssmin');
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
+	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-connect');
 	grunt.loadNpmTasks('grunt-contrib-watch');
 	grunt.loadNpmTasks('grunt-contrib-clean');
@@ -132,9 +128,9 @@ module.exports = function (grunt) {
 	// Debug task (no uglification)
 	grunt.registerTask('debug', 'Run build tasks sans ugification for easier debugging', function() {
 		var watch_tasks = grunt.config('watch.zapi.tasks');
-		watch_tasks.splice(watch_tasks.indexOf('uglify:dist'), 1, 'copy:uglify_alternative');
+		watch_tasks.splice(watch_tasks.indexOf('uglify:dist'), 1, 'concat:uglify_alternative');
 		grunt.config('watch.zapi.tasks', watch_tasks);
-		grunt.task.run(['cssmin', 'copy:zapi', 'jshint', 'copy:uglify_alternative', 'clean', 'connect', 'watch']);
+		grunt.task.run(['cssmin', 'copy:zapi', 'jshint', 'concat:uglify_alternative', 'clean', 'connect', 'watch']);
 	});
 };
 
