@@ -41,15 +41,15 @@
 			]
 		},
 		// An array of years of the references (for archive page)
-		years      : [],
+		years                    : [],
 		// Total number of references
-		total      : false,
+		total                    : false,
 		// Flag if is initial load
-		is_init    : true,
+		is_init                  : true,
 		// Flag for loading all references immediately
-		load_all   : false,
+		is_all_loading           : false,
 		// Flag for keeping track if all references have been loaded
-		all_loaded : false,
+		is_all_loaded            : false,
 		// Class to add to body when loading references
 		loading_class            : 'loading-references',
 		// HTML and CSS snippets
@@ -58,8 +58,8 @@
 		monitoring_css           : '<%= monitoring_css %>',
 		year_filter_html         : '',
 		// Set the correct height of the tab iframe
-		tab_height_timeout: '',
-		fixTabHeight: function() {
+		tab_height_timeout       : '',
+		fixTabHeight : function() {
 			window.clearTimeout(zapi.tab_height_timeout);
 			zapi.tab_height_timeout = window.setTimeout(function() {
 				// Remove this event listener, adjust height, add back the listener
@@ -72,18 +72,18 @@
 				}, 200);
 			}, 200);
 		},
-		filterByType: function(type) {
+		filterByType : function(type) {
 			return function() {
 				return $(this).attr('zapi:type') === type;
 			};
 		},
-		buildParams: function(options) {
+		buildParams  : function(options) {
 			zapi.params = $.extend({}, zapi.defaults, options);
 			if (zapi.params.quarterly) {
 				zapi.params.num_entries = 99;
 			}
 		},
-		getFeedUrl: function() {
+		getFeedUrl   : function() {
 			var feed_url = zapi.feed_base;
 			
 			// Build the zotero api url
@@ -115,7 +115,7 @@
 				zapi.initialize();
 			}
 			// If all references are already loaded, return
-			if (zapi.all_loaded) {
+			if (zapi.is_all_loaded) {
 				return;
 			}
 			// Get the google feed api url
@@ -147,15 +147,15 @@
 						return false;
 					}
 					var // Structure of resp: resp.responseData.feed.entries[]
-						$feed             = $($.parseXML(resp.responseData.xmlString)),
-						$entries          = $feed.find('entry'),
-						len               = $entries.length,
-						i                 = 0,
-						ref_html          = '',
-						the_year          = '',
-						year_class        = '',
-						year_title_class  = '',
-						is_new_year       = false,
+						$feed              = $($.parseXML(resp.responseData.xmlString)),
+						$entries           = $feed.find('entry'),
+						len                = $entries.length,
+						i                  = 0,
+						ref_html           = '',
+						the_year           = '',
+						year_class         = '',
+						year_title_class   = '',
+						is_new_year        = false,
 						years_for_quarters = [],
 						qtr_idx,
 						the_month,
@@ -358,7 +358,7 @@
 					} else {
 						// We have finished, so we can process the last year's quarter filters
 						years_for_quarters.push(the_year);
-						zapi.all_loaded = true;
+						zapi.is_all_loaded = true;
 						zapi.$body.trigger('references-load.' + zapi.collection_name);
 					}
 					// Quarter filter setup
@@ -368,10 +368,10 @@
 				}
 			});
 		},
-		// Set up infinite scroll-style fetching of next set of references (or trigger it right away if load_all)
+		// Set up infinite scroll-style fetching of next set of references (or trigger it right away if is_all_loading)
 		getNextReferences: function(timedout) {
-			// If not load_all and this is not the timeout, set up timeout and return
-			if (!zapi.load_all && !timedout) {
+			// If not is_all_loading and this is not the timeout, set up timeout and return
+			if (!zapi.is_all_loading && !timedout) {
 				// Make sure resize.tabs has had a chance to do its magic by attaching inview event after 500 ms
 				window.setTimeout(function() {
 					zapi.getNextReferences(true);
@@ -385,8 +385,8 @@
 				zapi.params.num_entries = 99;
 			}
 			
-			// If not load_all, add a handler to the parent window to load the next set of results
-			if (!zapi.load_all) {
+			// If not is_all_loading, add a handler to the parent window to load the next set of results
+			if (!zapi.is_all_loading) {
 				zapi.$footer.on('inview.' + zapi.collection_name, function() {
 					// Is the current active tab this one?
 					if ($('.tab-pane.active').attr('id') !== zapi.collection_name) {
@@ -422,8 +422,8 @@
 			// Add .active/.open
 			zapi.yearFilterAddActive();
 			
-			if (!zapi.all_loaded) {
-				if (zapi.load_all) {
+			if (!zapi.is_all_loaded) {
+				if (zapi.is_all_loading) {
 					// Already working on it
 					return;
 				}
@@ -438,8 +438,8 @@
 			}
 			// Don't run this function again
 			zapi.$body.off('click.year-filter.' + zapi.collection_name);
-			zapi.$body.on('click.year-filter.' + zapi.collection_name, '.year-filter', zapi.yearFilterToggle);
-			zapi.$body.on('click.year-filter.' + zapi.collection_name, '.year-filter h3', zapi.yearFilterTitleToggle);
+			zapi.$body.on( 'click.year-filter.' + zapi.collection_name, '.year-filter', zapi.yearFilterToggle);
+			zapi.$body.on( 'click.year-filter.' + zapi.collection_name, '.year-filter h3', zapi.yearFilterTitleToggle);
 		},
 		yearFilterToggle: function(evt) {
 			evt.stopPropagation();
@@ -531,7 +531,6 @@
 					}
 				}
 			});
-			parent.console.log($quarters);
 		}
 	};
 
