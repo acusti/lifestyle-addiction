@@ -296,7 +296,7 @@
 							zapi.$year_sections = zapi.$body.find('.year-section');
 							// Build years list
 							for (; i < len; i++) {
-								if (zapi.years[i].length) {
+								if (zapi.years[i].length === 4) {
 									year_list += '<h6><a class="year-link" href="#year-' + zapi.years[i] + '">' + zapi.years[i] + '</a></h6>';
 								}
 							}
@@ -341,6 +341,10 @@
 							if (zapi.$year_filter.hasClass('active')) {
 								zapi.$window.trigger('change-height.tabs.' + zapi.collection_name);
 							}
+							// Reload all quarter filters (to avoid bug with first couple year's quarter filter click handlers no longer being triggered after all references finish loading)
+							window.setTimeout(function() {
+								zapi.setupQuarterFilters(zapi.years);
+							}, 200);
 						});
 					}
 					zapi.is_init = false;
@@ -350,9 +354,17 @@
 					zapi.$window.on('resize.tabs.' + zapi.collection_name, zapi.fixTabHeight).trigger('resize.tabs.' + zapi.collection_name);
 					
 					// If we have not yet loaded all the references, set up fetching of the next set of references
-					// Add check to make sure we have a valid total, and if not, try to fetch the next set
+					// First check to make sure we have a valid total (if not, try to fetch the next set)
 					if (zapi.total === false || zapi.params.start + zapi.params.num_entries < zapi.total) {
-						zapi.getNextReferences();
+						// Special logic for quarterly collections (in which case load all references)
+						if (zapi.params.quarterly && !zapi.is_all_loading) {
+							// Trigger immediate set up of next references (don't need infinite loading functionality)
+							zapi.getNextReferences(true);
+							zapi.getAllReferences();
+						} else {
+							// Set up next references set
+							zapi.getNextReferences();
+						}
 					} else {
 						// We have finished, so we can process the last year's quarter filters
 						years_for_quarters.push(the_year);
@@ -398,6 +410,21 @@
 				zapi.getReferences();
 			}
 		},
+		// Get all the rest of the references
+		getAllReferences: function() {
+			// If already loaded or loading all references, return
+			if (zapi.is_all_loaded || zapi.is_all_loading) {
+				return;
+			}
+			// Load 'em up
+			zapi.is_all_loading = true;
+			// Load max number of entries at a time
+			zapi.params.num_entries = 99;
+			// Set loading class
+			zapi.$body.addClass(zapi.loading_class);
+			// Kick off reference retrieval
+			zapi.getReferences();
+		},
 		initialize: function() {
 			zapi.prepareMarkup();
 			// Get current ip address for google API calls
@@ -432,14 +459,6 @@
 					// Already working on it
 					return;
 				}
-				// Load 'em up
-				zapi.load_all = true;
-				// Load max number of entries at a time
-				zapi.params.num_entries = 99;
-				// Set loading class
-				zapi.$body.addClass(zapi.loading_class);
-				// Kick off reference retrieval
-				zapi.getReferences();
 			}
 			// Don't run this function again
 			zapi.$body.off('click.year-filter.' + zapi.collection_name);
@@ -488,6 +507,9 @@
 			}
 			// Set up quarter filters, if applicable
 			for (; i < len; i++) {
+				if (the_years[i].length !== 4) {
+					continue;
+				}
 				$quarters       = zapi.$body.find('.year-section.' + the_years[i] + ' .quarters');
 				refs_by_quarter = [];
 				qtr_idx         = 0;
@@ -505,8 +527,8 @@
 			}
 		},
 		attachQuarterFilterToggle: function($quarters, refs_by_quarter) {
-			$quarters.find('.quarter-filter.is-enabled').on('mouseover', function() {
-				var $filter = $(this),
+			$quarters.find('.quarter-filter.is-enabled').off('click.quarter-filter.' + zapi.collection_name).on('click.quarter-filter.' + zapi.collection_name, function() {
+				var $filter        = $(this),
 					active_quarter = '',
 					i;
 				// No other quarter links should be active

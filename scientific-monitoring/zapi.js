@@ -17,7 +17,6 @@
 		feed_base       : 'https://api.zotero.org/users/',
 		namespace       : 'zapi\\:',
 		lang            : 'en',
-		// @todo try fetching xml nodes with namespace prefix; if it doesn't work, set namespace prefix to ''
 		// Element cache (careful with using string selectors with this jQuery; it will search the parent DOM)
 		$body           : $(document.body),
 		$window         : $(window),
@@ -42,15 +41,15 @@
 			]
 		},
 		// An array of years of the references (for archive page)
-		years      : [],
+		years                    : [],
 		// Total number of references
-		total      : false,
+		total                    : false,
 		// Flag if is initial load
-		is_init    : true,
+		is_init                  : true,
 		// Flag for loading all references immediately
-		load_all   : false,
+		is_all_loading           : false,
 		// Flag for keeping track if all references have been loaded
-		all_loaded : false,
+		is_all_loaded            : false,
 		// Class to add to body when loading references
 		loading_class            : 'loading-references',
 		// HTML and CSS snippets
@@ -59,8 +58,8 @@
 		monitoring_css           : '.year-filter{width:24%;min-width:145px;float:right;margin:0 0 .5em .25em}.year-filter .item{position:relative;max-height:50px;overflow:hidden;cursor:pointer}.year-filter.active .item{max-height:450px;overflow-y:auto;cursor:default}body.loading-references .year-filter.active .item{max-height:110px;overflow:hidden}.year-filter .spinner{position:static;margin:1em auto}.year-filter h3{position:relative;cursor:pointer}.year-filter h6 a{display:block;padding:.2em 1em}.quarter-filter.is-enabled:hover,.year-filter h6 a:hover{background:#f0f0f0;cursor:pointer}.quarter-filter.active,.quarter-filter.active:hover,.year-filter h6 a.active,.year-filter h6 a.active:hover{background:#ddd}.quarters{float:left;margin-left:9px;margin-top:20px;line-height:42px}#boot .year-section h2{margin-top:20px}#boot .year-section.first h2,#boot.filtered .year-section h2{margin-top:0}#boot .year-section h6{margin-top:1em}.filtered .year-section .quarters,.year-section.first .quarters{margin-top:0}.quarter-filter{border:1px solid #e5e5e5;font-weight:700;font-size:13px;padding:.25em .35em;margin:0 .25em;-ms-filter:"alpha(Opacity=50)";filter:alpha(opacity=50);opacity:.5}.quarter-filter.is-enabled{-ms-filter:"alpha(Opacity=100)";filter:alpha(opacity=100);opacity:1}h2.quarterly{float:left}.ref-entry{clear:left}#boot .year-filter h6 a:hover{text-decoration:none}#boot .year-filter.active .item:hover{background-color:transparent}',
 		year_filter_html         : '',
 		// Set the correct height of the tab iframe
-		tab_height_timeout: '',
-		fixTabHeight: function() {
+		tab_height_timeout       : '',
+		fixTabHeight : function() {
 			window.clearTimeout(zapi.tab_height_timeout);
 			zapi.tab_height_timeout = window.setTimeout(function() {
 				// Remove this event listener, adjust height, add back the listener
@@ -73,18 +72,18 @@
 				}, 200);
 			}, 200);
 		},
-		filterByType: function(type) {
+		filterByType : function(type) {
 			return function() {
 				return $(this).attr('zapi:type') === type;
 			};
 		},
-		buildParams: function(options) {
+		buildParams  : function(options) {
 			zapi.params = $.extend({}, zapi.defaults, options);
 			if (zapi.params.quarterly) {
 				zapi.params.num_entries = 99;
 			}
 		},
-		getFeedUrl: function() {
+		getFeedUrl   : function() {
 			var feed_url = zapi.feed_base;
 			
 			// Build the zotero api url
@@ -116,7 +115,7 @@
 				zapi.initialize();
 			}
 			// If all references are already loaded, return
-			if (zapi.all_loaded) {
+			if (zapi.is_all_loaded) {
 				return;
 			}
 			// Get the google feed api url
@@ -148,15 +147,15 @@
 						return false;
 					}
 					var // Structure of resp: resp.responseData.feed.entries[]
-						$feed             = $($.parseXML(resp.responseData.xmlString)),
-						$entries          = $feed.find('entry'),
-						len               = $entries.length,
-						i                 = 0,
-						ref_html          = '',
-						the_year          = '',
-						year_class        = '',
-						year_title_class  = '',
-						is_new_year       = false,
+						$feed              = $($.parseXML(resp.responseData.xmlString)),
+						$entries           = $feed.find('entry'),
+						len                = $entries.length,
+						i                  = 0,
+						ref_html           = '',
+						the_year           = '',
+						year_class         = '',
+						year_title_class   = '',
+						is_new_year        = false,
 						years_for_quarters = [],
 						qtr_idx,
 						the_month,
@@ -297,7 +296,7 @@
 							zapi.$year_sections = zapi.$body.find('.year-section');
 							// Build years list
 							for (; i < len; i++) {
-								if (zapi.years[i].length) {
+								if (zapi.years[i].length === 4) {
 									year_list += '<h6><a class="year-link" href="#year-' + zapi.years[i] + '">' + zapi.years[i] + '</a></h6>';
 								}
 							}
@@ -337,13 +336,15 @@
 							// After letting year links settle, remove loading class (to enable smooth dropdown effect)
 							window.setTimeout(function() {
 								zapi.$body.removeClass(zapi.loading_class);
-							}, 50);
-							// If .year-filter is currently active, recalculate iframe height after 0.5 seconds
+							}, 200);
+							// If .year-filter is currently active, height has changed, so trigger our event
 							if (zapi.$year_filter.hasClass('active')) {
-								window.setTimeout(function() {
-									zapi.$window.trigger('resize.tabs.' + zapi.collection_name);
-								}, 500);
+								zapi.$window.trigger('change-height.tabs.' + zapi.collection_name);
 							}
+							// Reload all quarter filters (to avoid bug with first couple year's quarter filter click handlers no longer being triggered after all references finish loading)
+							window.setTimeout(function() {
+								zapi.setupQuarterFilters(zapi.years);
+							}, 200);
 						});
 					}
 					zapi.is_init = false;
@@ -353,13 +354,21 @@
 					zapi.$window.on('resize.tabs.' + zapi.collection_name, zapi.fixTabHeight).trigger('resize.tabs.' + zapi.collection_name);
 					
 					// If we have not yet loaded all the references, set up fetching of the next set of references
-					// Add check to make sure we have a valid total, and if not, try to fetch the next set
+					// First check to make sure we have a valid total (if not, try to fetch the next set)
 					if (zapi.total === false || zapi.params.start + zapi.params.num_entries < zapi.total) {
-						zapi.getNextReferences();
+						// Special logic for quarterly collections (in which case load all references)
+						if (zapi.params.quarterly && !zapi.is_all_loading) {
+							// Trigger immediate set up of next references (don't need infinite loading functionality)
+							zapi.getNextReferences(true);
+							zapi.getAllReferences();
+						} else {
+							// Set up next references set
+							zapi.getNextReferences();
+						}
 					} else {
 						// We have finished, so we can process the last year's quarter filters
 						years_for_quarters.push(the_year);
-						zapi.all_loaded = true;
+						zapi.is_all_loaded = true;
 						zapi.$body.trigger('references-load.' + zapi.collection_name);
 					}
 					// Quarter filter setup
@@ -369,10 +378,10 @@
 				}
 			});
 		},
-		// Set up infinite scroll-style fetching of next set of references (or trigger it right away if load_all)
+		// Set up infinite scroll-style fetching of next set of references (or trigger it right away if is_all_loading)
 		getNextReferences: function(timedout) {
-			// If not load_all and this is not the timeout, set up timeout and return
-			if (!zapi.load_all && !timedout) {
+			// If not is_all_loading and this is not the timeout, set up timeout and return
+			if (!zapi.is_all_loading && !timedout) {
 				// Make sure resize.tabs has had a chance to do its magic by attaching inview event after 500 ms
 				window.setTimeout(function() {
 					zapi.getNextReferences(true);
@@ -386,8 +395,8 @@
 				zapi.params.num_entries = 99;
 			}
 			
-			// If not load_all, add a handler to the parent window to load the next set of results
-			if (!zapi.load_all) {
+			// If not is_all_loading, add a handler to the parent window to load the next set of results
+			if (!zapi.is_all_loading) {
 				zapi.$footer.on('inview.' + zapi.collection_name, function() {
 					// Is the current active tab this one?
 					if ($('.tab-pane.active').attr('id') !== zapi.collection_name) {
@@ -401,6 +410,21 @@
 				zapi.getReferences();
 			}
 		},
+		// Get all the rest of the references
+		getAllReferences: function() {
+			// If already loaded or loading all references, return
+			if (zapi.is_all_loaded || zapi.is_all_loading) {
+				return;
+			}
+			// Load 'em up
+			zapi.is_all_loading = true;
+			// Load max number of entries at a time
+			zapi.params.num_entries = 99;
+			// Set loading class
+			zapi.$body.addClass(zapi.loading_class);
+			// Kick off reference retrieval
+			zapi.getReferences();
+		},
 		initialize: function() {
 			zapi.prepareMarkup();
 			// Get current ip address for google API calls
@@ -410,6 +434,13 @@
 				success  : function(resp) {
 					zapi.params.ip = resp.ip;
 				}
+			});
+			// Add custom height change event handler to body
+			zapi.$window.on('change-height.tabs.' + zapi.collection_name, function() {
+				// Trigger resize tabs event after 0.5 seconds
+				window.setTimeout(function() {
+					zapi.$window.trigger('resize.tabs.' + zapi.collection_name);
+				}, 500);
 			});
 		},
 		prepareMarkup: function() {
@@ -423,44 +454,30 @@
 			// Add .active/.open
 			zapi.yearFilterAddActive();
 			
-			if (!zapi.all_loaded) {
-				if (zapi.load_all) {
+			if (!zapi.is_all_loaded) {
+				if (zapi.is_all_loading) {
 					// Already working on it
 					return;
 				}
-				// Load 'em up
-				zapi.load_all = true;
-				// Load max number of entries at a time
-				zapi.params.num_entries = 99;
-				// Set loading class
-				zapi.$body.addClass(zapi.loading_class);
-				// Kick off reference retrieval
-				zapi.getReferences();
 			}
 			// Don't run this function again
 			zapi.$body.off('click.year-filter.' + zapi.collection_name);
-			zapi.$body.on('click.year-filter.' + zapi.collection_name, '.year-filter', zapi.yearFilterToggle);
-			zapi.$body.on('click.year-filter.' + zapi.collection_name, '.year-filter h3', zapi.yearFilterTitleToggle);
+			zapi.$body.on( 'click.year-filter.' + zapi.collection_name, '.year-filter', zapi.yearFilterToggle);
+			zapi.$body.on( 'click.year-filter.' + zapi.collection_name, '.year-filter h3', zapi.yearFilterTitleToggle);
 		},
 		yearFilterToggle: function(evt) {
 			evt.stopPropagation();
 			// Add .active/.open
 			zapi.yearFilterAddActive();
-
-			// Recalculate iframe height after 0.5 seconds
-			window.setTimeout(function() {
-				zapi.$window.trigger('resize.tabs.' + zapi.collection_name);
-			}, 500);
+			// Trigger change height
+			zapi.$window.trigger('change-height.tabs.' + zapi.collection_name);
 		},
 		yearFilterTitleToggle: function(evt) {
 			evt.stopPropagation();
 			// Toggle .active/.open
 			zapi.yearFilterToggleActive();
-			
-			// Recalculate iframe height after 0.5 seconds
-			window.setTimeout(function() {
-				zapi.$window.trigger('resize.tabs.' + zapi.collection_name);
-			}, 500);
+			// Trigger change height
+			zapi.$window.trigger('change-height.tabs.' + zapi.collection_name);
 		},
 		yearFilterAddActive: function($year_filter) {
 			$year_filter = $year_filter || zapi.$body.find('.year-filter');
@@ -490,6 +507,9 @@
 			}
 			// Set up quarter filters, if applicable
 			for (; i < len; i++) {
+				if (the_years[i].length !== 4) {
+					continue;
+				}
 				$quarters       = zapi.$body.find('.year-section.' + the_years[i] + ' .quarters');
 				refs_by_quarter = [];
 				qtr_idx         = 0;
@@ -507,8 +527,8 @@
 			}
 		},
 		attachQuarterFilterToggle: function($quarters, refs_by_quarter) {
-			$quarters.find('.quarter-filter.is-enabled').on('mouseover', function() {
-				var $filter = $(this),
+			$quarters.find('.quarter-filter.is-enabled').off('click.quarter-filter.' + zapi.collection_name).on('click.quarter-filter.' + zapi.collection_name, function() {
+				var $filter        = $(this),
 					active_quarter = '',
 					i;
 				// No other quarter links should be active
@@ -531,8 +551,9 @@
 						}
 					}
 				}
+				// Trigger change height
+				zapi.$window.trigger('change-height.tabs.' + zapi.collection_name);
 			});
-			parent.console.log($quarters);
 		}
 	};
 
