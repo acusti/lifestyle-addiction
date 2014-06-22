@@ -17,7 +17,6 @@
 		feed_base       : 'https://api.zotero.org/users/',
 		namespace       : 'zapi\\:',
 		lang            : 'en',
-		// @todo try fetching xml nodes with namespace prefix; if it doesn't work, set namespace prefix to ''
 		// Element cache (careful with using string selectors with this jQuery; it will search the parent DOM)
 		$body           : $(document.body),
 		$window         : $(window),
