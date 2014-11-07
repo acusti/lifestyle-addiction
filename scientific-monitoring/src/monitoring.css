@@ -3,12 +3,15 @@
 	min-width: 145px;
 	float: right;
 	margin: 0 0 0.5em 0.25em;
+	border: 1px solid rgb(229, 229, 229);
 }
 .year-filter .item {
 	position: relative;
-	max-height: 50px;
+	max-height: 64px;
+	padding: 0.5em 0.75em;
 	overflow: hidden;
 	cursor: pointer;
+	transition: max-height 0.35s;
 }
 .year-filter.active .item {
 	max-height: 450px;

@@ -9,7 +9,11 @@ module.exports = function (grunt) {
 		// Task configuration
 		uglify: {
 			dist: {
-				src     : ['<%= copy.zapi.files[0].dest %>', 'scientific-monitoring/src/str-to-date.js'],
+				src     : [
+					'bower_components/fuse.js/src/fuse.js',
+					'scientific-monitoring/src/str-to-date.js',
+					'<%= copy.zapi.files[0].dest %>',
+				],
 				dest    : 'scientific-monitoring/zapi.js',
 				options : {
 					sourceMap               : true,
@@ -18,28 +22,16 @@ module.exports = function (grunt) {
 			}
 		},
 		jshint: {
-			options: {
-				// To keep building even if the file fails jshint:
-				// force: true,
-				// Assume browser globals
-				browser  : true,
-				// What to be strict about
-				// === and !==
-				eqeqeq   : true,
-				// IE7 compatibility
-				es3      : true,
-				newcap   : true,
-				noempty  : true,
-				quotmark : 'single',
-				undef    : true,
-				unused   : true,
-				trailing : true
+			options   : {
+				ignores: [
+					'bower_components/fuse.js/src/fuse.js',
+				]
 			},
-			gruntfile: {
+			gruntfile : {
 				src: 'Gruntfile.js'
 			},
 			zapi: {
-				src: '<%= uglify.dist.src %>'
+				src: '<%= uglify.dist.src %>',
 			}
 		},
 		cssmin: {
@@ -66,7 +58,7 @@ module.exports = function (grunt) {
 							template_data = {
 								'monitoring_css': monitoring_css
 							};
-						
+
 						// Run the file through grunt's template engine
 						return grunt.template.process(content, {data: template_data});
 					}
@@ -124,13 +116,12 @@ module.exports = function (grunt) {
 
 	// Default task
 	grunt.registerTask('default', ['cssmin', 'copy:zapi', 'jshint', 'uglify', 'clean', 'connect', 'watch']);
-	
+
 	// Debug task (no uglification)
-	grunt.registerTask('debug', 'Run build tasks sans ugification for easier debugging', function() {
+	grunt.registerTask('debug', 'Run build tasks sans uglification for easier debugging', function() {
 		var watch_tasks = grunt.config('watch.zapi.tasks');
 		watch_tasks.splice(watch_tasks.indexOf('uglify:dist'), 1, 'concat:uglify_alternative');
 		grunt.config('watch.zapi.tasks', watch_tasks);
 		grunt.task.run(['cssmin', 'copy:zapi', 'jshint', 'concat:uglify_alternative', 'clean', 'connect', 'watch']);
 	});
 };
-

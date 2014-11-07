@@ -1,12 +1,12 @@
 /**
  * Zotero date string parsing utility function
- * 
+ *
  * Adapted to work standalone
- * 
+ *
  * From https://github.com/zotero/zotero/blob/4.0/chrome/content/zotero/xpcom/date.js
  */
 
-/*jshint quotmark: false, eqeqeq: false */
+/*jshint quotmark: false, eqeqeq: false, strict: false, curly: false */
 
 (function() {
 
@@ -25,23 +25,23 @@
 	var _monthRe = null;
 	var _dayRe = null;
 	var _country = 'CA';
-	
+
 	var strToDate = function(string) {
 		var date = {
 			order: ''
 		};
-		
+
 		// skip empty things
 		if(!string) {
 			return date;
 		}
-		
+
 		var parts = [],
 			part,
 			i;
-		
+
 		string = string.toString().replace(/^\s+|\s+$/g, "").replace(/\s+/, " ");
-		
+
 		// first, directly inspect the string
 		var m = _slashRe.exec(string);
 		if (m &&
@@ -82,12 +82,12 @@
 				date.year = m[6];
 				date.order += 'y';
 			}
-			
+
 			if(date.year) date.year = parseInt(date.year, 10);
 			if(date.day) date.day = parseInt(date.day, 10);
 			if(date.month) {
 				date.month = parseInt(date.month, 10);
-				
+
 				if(date.month > 12) {
 					// swap day and month
 					var tmp = date.day;
@@ -99,7 +99,7 @@
 						.replace('M', 'm');
 				}
 			}
-			
+
 			if((!date.month || date.month <= 12) && (!date.day || date.day <= 31)) {
 				if(date.year && date.year < 100) {	// for two digit years, determine proper
 													// four digit year
@@ -107,7 +107,7 @@
 					var year = today.getFullYear();
 					var twoDigitYear = year % 100;
 					var century = year - twoDigitYear;
-					
+
 					if(date.year <= twoDigitYear) {
 						// assume this date is from our century
 						date.year = century + date.year;
@@ -116,9 +116,9 @@
 						date.year = century - 100 + date.year;
 					}
 				}
-				
+
 				if(date.month) date.month--;		// subtract one for JS style
-				
+
 				parts.push(
 					{ part: m[1], before: true },
 					{ part: m[7] }
@@ -133,7 +133,7 @@
 		} else {
 			parts.push({ part: string });
 		}
-		
+
 		// couldn't find something with the algorithms; use regexp
 		// YEAR
 		if(!date.year) {
@@ -151,17 +151,17 @@
 				}
 			}
 		}
-		
+
 		// MONTH
 		if(!date.month) {
 			// compile month regular expression
 			var months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul',
 				'aug', 'sep', 'oct', 'nov', 'dec'];
-			
+
 			if(!_monthRe) {
 				_monthRe = new RegExp("^(.*)\\b("+months.join("|")+")[^ ]*(?: (.*)$|$)", "i");
 			}
-			
+
 			for (i in parts) {
 				m = _monthRe.exec(parts[i].part);
 				if (m) {
@@ -177,7 +177,7 @@
 				}
 			}
 		}
-		
+
 		// DAY
 		if(!date.day) {
 			// compile day regular expression
@@ -185,7 +185,7 @@
 				var daySuffixes = "";
 				_dayRe = new RegExp("\\b([0-9]{1,2})(?:"+daySuffixes+")?\\b(.*)", "i");
 			}
-			
+
 			for (i in parts) {
 				m = _dayRe.exec(parts[i].part);
 				if (m) {
@@ -211,25 +211,25 @@
 				}
 			}
 		}
-		
+
 		// Concatenate date parts
 		date.part = '';
 		for (i in parts) {
 			date.part += parts[i].part + ' ';
 		}
-		
+
 		// clean up date part
 		if(date.part) {
 			date.part = date.part.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, "");
 		}
-		
+
 		if(date.part === "" || date.part === undefined) {
 			delete date.part;
 		}
-		
+
 		//make sure year is always a string
 		if(date.year || date.year === 0) date.year += '';
-		
+
 		return date;
 	};
 	// Internal helper function
