@@ -45,8 +45,6 @@
 		},
 		// An array of years of the references (for archive page)
 		years                    : [],
-		// Total number of references
-		total                    : false,
 		// Flag if is initial load
 		is_init                  : true,
 		// Flag for loading all references immediately
@@ -180,25 +178,17 @@
 					zapi.getReferences();
 					return;
 				}
-				// Check if we have set the total results yet
-				if (zapi.total === false) {
-					// First time through, try to fetch totalResults node using the namespace ('zapi\\:')
-					zapi.total = $feed.find(zapi.namespace + 'totalResults');
-					// If that failed, try it without the namespace (set the namespace as an empty string)
-					if (!zapi.total.length) {
+				// First time through, try to figure out which namespace will work
+				if (zapi.is_init && len) {
+					// Try to fetch a zapi:subcontent node using the namespace ('zapi\\:')
+					if (!$($entries[0]).find(zapi.namespace + 'subcontent').length) {
+						// If that failed, namespace must be an empty string
 						zapi.namespace = '';
-						zapi.total = $feed.find(zapi.namespace + 'totalResults');
-					}
-					// If we found it, set it. Otherwise, keep zapi.total as false
-					if (zapi.total.length) {
-						zapi.total = parseInt(zapi.total.text(), 10);
-					} else {
-						zapi.total = false;
 					}
 				}
 				for (; i < len; i++) {
 					$entry = $($entries[i]);
-					// If this selector doesn't work, we need to use a filter function and check attr('zapi:type')
+					// Use a filter function and check attr('zapi:type')
 					entry = $.parseJSON($entry.find(zapi.namespace + 'subcontent').filter(zapi.filterByType('json')).text());
 
 					entry_class = 'ref-entry';
@@ -382,8 +372,8 @@
 				zapi.$window.on('resize.tabs.' + zapi.collection_name, zapi.fixTabHeight).trigger('resize.tabs.' + zapi.collection_name);
 
 				// If we have not yet loaded all the references, set up fetching of the next set of references
-				// First check to make sure we have a valid total (if not, try to fetch the next set)
-				if (zapi.total === false || zapi.params.start + zapi.params.num_entries < zapi.total) {
+                // With a sanity check to avoid infinite loop if something went wrong (never go more above 3000 entries)
+				if (len >= zapi.params.num_entries && zapi.params.start < 3000) {
 					// Special logic for quarterly collections (in which case load all references)
 					if (zapi.params.quarterly && !zapi.is_all_loading) {
 						// Trigger immediate set up of next references (don't need infinite loading functionality)

@@ -1,7 +1,5 @@
 (function($) {
-	'use strict';
-	var zapi;
-	// js_plugin_src
+	var zapi, js_plugin_src;
 
 	zapi = {
 		defaults        : {
@@ -27,7 +25,6 @@
 		$year_filter    : $(),
 		$year_links     : $(),
 		$year_sections  : $(),
-		$reference_list : $(),
 		// Labels for quarter-year filters
 		quarter_labels  : {
 			'en': [
@@ -45,12 +42,10 @@
 		},
 		// An array of years of the references (for archive page)
 		years                    : [],
-		// Total number of references
-		total                    : false,
 		// Flag if is initial load
 		is_init                  : true,
 		// Flag for loading all references immediately
-		is_all_loading           : true,
+		is_all_loading           : false,
 		// Flag for keeping track if all references have been loaded
 		is_all_loaded            : false,
 		// Class to add to body when loading references
@@ -60,8 +55,6 @@
 		loading_indicator_html   : '',
 		monitoring_css           : '<%= monitoring_css %>',
 		year_filter_html         : '',
-		// Reference list as array of objects for searching
-		reference_list           : [],
 		// Set the correct height of the tab iframe
 		tab_height_timeout       : '',
 		fixTabHeight : function() {
@@ -84,9 +77,6 @@
 		},
 		buildParams  : function(options) {
 			zapi.params = $.extend({}, zapi.defaults, options);
-			// if (zapi.params.quarterly) {
-			//	zapi.params.num_entries = 99;
-			// }
 		},
 		getFeedUrl   : function() {
 			var feed_url = zapi.feed_base;
@@ -146,11 +136,6 @@
 				url      : feed_url,
 				dataType : 'jsonp'
 			}).done(function(data) {
-				if (!data.responseData || !data.responseData.xmlString || !data.responseData.xmlString.length) {
-					// Try again
-					zapi.getReferences();
-					return;
-				}
 				var // Structure of resp: data.responseData.feed.entries[]
 					$feed              = $($.parseXML(data.responseData.xmlString)),
 					$entries           = $feed.find('entry'),
@@ -158,67 +143,40 @@
 					i                  = 0,
 					ref_html           = '',
 					the_year           = '',
-					// year_class         = '',
+					year_class         = '',
 					year_title_class   = '',
-					year_title         = '',
-					the_entry          = {},
-					entry_title        = '',
-					entry_citation     = '',
-					regex_match_html   = /<\/?\w+((\s+\w+(\s*=\s*(?:\".*?"|'.*?'|[^'\">\s]+))?)+\s*|\s*)\/?>/gi,
 					is_new_year        = false,
 					years_for_quarters = [],
 					qtr_idx,
 					the_month,
 					$entry,
 					$bib,
+					bib_html,
 					bib_url_start,
 					entry,
 					entry_class;
 
-				if (!$feed.length) {
-					// Try again
-					zapi.getReferences();
-					return;
-				}
-				// Check if we have set the total results yet
-				if (zapi.total === false) {
-					// First time through, try to fetch totalResults node using the namespace ('zapi\\:')
-					zapi.total = $feed.find(zapi.namespace + 'totalResults');
-					// If that failed, try it without the namespace (set the namespace as an empty string)
-					if (!zapi.total.length) {
+				// First time through, try to figure out which namespace will work
+				if (zapi.is_init && len) {
+					// Try to fetch a zapi:subcontent node using the namespace ('zapi\\:')
+					if (!$($entries[0]).find(zapi.namespace + 'subcontent').length) {
+						// If that failed, namespace must be an empty string
 						zapi.namespace = '';
-						zapi.total = $feed.find(zapi.namespace + 'totalResults');
-					}
-					// If we found it, set it. Otherwise, keep zapi.total as false
-					if (zapi.total.length) {
-						zapi.total = parseInt(zapi.total.text(), 10);
-					} else {
-						zapi.total = false;
 					}
 				}
 				for (; i < len; i++) {
 					$entry = $($entries[i]);
-					// If this selector doesn't work, we need to use a filter function and check attr('zapi:type')
+					// Use our filter function helper (checks attr('zapi:type'))
 					entry = $.parseJSON($entry.find(zapi.namespace + 'subcontent').filter(zapi.filterByType('json')).text());
 
 					entry_class = 'ref-entry';
 
-					// Initialize the_entry object
-					the_entry = {
-						title:         '',
-						citation:      '',
-						wrapper_class: '',
-						before:        '',
-						after:         '',
-						search_text:   ''
-					};
-
 					the_year = $entry.find(zapi.namespace + 'year').text();
-					is_new_year = zapi.years.length && zapi.years[zapi.years.length - 1] > the_year;
+					is_new_year = zapi.years[zapi.years.length - 1] !== the_year;
 					// Is it a new year section or the first of this group of references
-					if ((!i || is_new_year) && the_year) {
+					if ((!ref_html.length || is_new_year) && the_year) {
 						// If this is not the first year header and not the first of this group of references, close the previous year div
-						/*if (zapi.years.length && ref_html.length) {
+						if (zapi.years.length && ref_html.length) {
 							ref_html += '</div>';
 						}
 						year_class = 'year-section ' + the_year;
@@ -226,25 +184,23 @@
 						if (!zapi.years.length) {
 							year_class += ' first';
 						}
-						ref_html += '<div class="' + year_class + '">';*/
+						ref_html += '<div class="' + year_class + '">';
 						// If first of this year, add heading and push year onto years array
 						if (is_new_year) {
-							year_title_class = 'year-title';
 							if (zapi.params.quarterly) {
-								year_title_class += ' quarterly';
+								year_title_class = ' class="quarterly"';
 							}
-							year_title = '<h2 id="year-' + the_year + '"' + year_title_class + '>' + the_year + '</h2>';
+							ref_html += '<h2 id="year-' + the_year + '"' + year_title_class + '>' + the_year + '</h2>';
 							zapi.years.push(the_year);
 							// If is quarterly, add quarters
 							if (zapi.params.quarterly) {
-								year_title += '<div class="quarters">';
+								ref_html += '<div class="quarters">';
 								for (qtr_idx = 0; qtr_idx < 4; qtr_idx++) {
-									year_title += '<span class="quarter-filter" data-quarter="' + qtr_idx + '">' + zapi.quarter_labels[zapi.lang][qtr_idx] + '</span>';
+
+									ref_html += '<span class="quarter-filter" data-quarter="' + qtr_idx + '">' + zapi.quarter_labels[zapi.lang][qtr_idx] + '</span>';
 								}
-								year_title += '</div>';
+								ref_html += '</div>';
 							}
-							year_title += '</h2>';
-							the_entry.before = year_title;
 							// If there is a previous year, process it for quarterly
 							if (zapi.years.length > 1) {
 								years_for_quarters.push(zapi.years[zapi.years.length - 2]);
@@ -267,27 +223,24 @@
 
 					$bib = $entry.find(zapi.namespace + 'subcontent').filter(zapi.filterByType('bib')).children('div');
 					if ($bib.length) {
-						entry_citation = $bib[0].outerHTML;
+						bib_html = $bib[0].outerHTML;
 						if (entry.url) {
-							bib_url_start = entry_citation.lastIndexOf(' from http://');
+							bib_url_start = bib_html.lastIndexOf(' from http://');
 							if (bib_url_start === -1) {
-								bib_url_start = entry_citation.lastIndexOf(' from https://');
+								bib_url_start = bib_html.lastIndexOf(' from https://');
 							}
 							if (bib_url_start !== -1) {
 								// The "from [url]" text always has ' Retrieved' before it, so go find that text
 								// bib_url_start -= 10;
-								bib_url_start = entry_citation.substring(0, bib_url_start).lastIndexOf(' Retrieved');
+								bib_url_start = bib_html.substring(0, bib_url_start).lastIndexOf(' Retrieved');
 								if (bib_url_start !== -1) {
-									entry_citation = entry_citation.substring(0, bib_url_start) + entry_citation.substring(entry_citation.indexOf('</div>'));
+									bib_html = bib_html.substring(0, bib_url_start) + bib_html.substring(bib_html.indexOf('</div>'));
 								}
 							}
 						}
+						ref_html += bib_html;
 					}
-					// TODO: add property to identify reference (actual dom object or id?)
-					zapi.reference_list.push({
-						title    : entry_title,
-						citation : entry_citation
-					});
+					ref_html += '</div>';
 				}
 				// Close div.year-section
 				ref_html += '</div>';
@@ -299,7 +252,7 @@
 				// Finished building HTML
 				// Pass it to callback
 				// ----------------------
-				// zapi.callback(ref_html);
+				zapi.callback(ref_html);
 				// ----------------------
 
 				// Initial run through, set up JS and styles for year filter
@@ -382,8 +335,8 @@
 				zapi.$window.on('resize.tabs.' + zapi.collection_name, zapi.fixTabHeight).trigger('resize.tabs.' + zapi.collection_name);
 
 				// If we have not yet loaded all the references, set up fetching of the next set of references
-				// First check to make sure we have a valid total (if not, try to fetch the next set)
-				if (zapi.total === false || zapi.params.start + zapi.params.num_entries < zapi.total) {
+				// With a sanity check to avoid infinite loop if something went wrong (never go more above 3000 entries)
+				if (len >= zapi.params.num_entries && zapi.params.start < 3000) {
 					// Special logic for quarterly collections (in which case load all references)
 					if (zapi.params.quarterly && !zapi.is_all_loading) {
 						// Trigger immediate set up of next references (don't need infinite loading functionality)
@@ -412,7 +365,7 @@
 		getNextReferences: function(timedout) {
 			// If not is_all_loading and this is not the timeout, set up timeout and return
 			if (!zapi.is_all_loading && !timedout) {
-				// Make sure resize.tabs has had a chance to do its magic
+				// Make sure resize.tabs has had a chance to do its magic by attaching inview event after 500 ms
 				window.setTimeout(function() {
 					zapi.getNextReferences(true);
 				}, 500);
@@ -420,13 +373,18 @@
 			}
 			zapi.params.start += zapi.params.num_entries;
 
-			// If this is the first time calling getNextReferences, adjust num_entries to max
-			// if (zapi.params.start === zapi.params.num_entries) {
-			//	zapi.params.num_entries = 99;
-			// }
-
-			// If is_all_loading, load the next set of results
-			if (zapi.is_all_loading) {
+			// If not is_all_loading, add a handler to the parent window to load the next set of results
+			if (!zapi.is_all_loading) {
+				zapi.$footer.on('inview.' + zapi.collection_name, function() {
+					// Is the current active tab this one?
+					if ($('.tab-pane.active').attr('id') !== zapi.collection_name) {
+						return;
+					}
+					// It is the current tab, so remove this handler and get the next set of references
+					zapi.$footer.off('inview.' + zapi.collection_name);
+					zapi.getReferences();
+				});
+			} else {
 				zapi.getReferences();
 			}
 		},
@@ -438,8 +396,6 @@
 			}
 			// Load 'em up
 			zapi.is_all_loading = true;
-			// Load max number of entries at a time
-			// zapi.params.num_entries = 99;
 			// Set loading class
 			zapi.$body.addClass(zapi.loading_class);
 			// Kick off reference retrieval
@@ -447,10 +403,6 @@
 		},
 		initialize: function() {
 			zapi.prepareMarkup();
-			// Insert list container and initialize List.js object
-			zapi.$reference_list = $('<ul class="reference-list" />').appendTo(zapi.$body);
-
-			// zapi.reference_list = new List(zapi.$reference_list, zapi.list_options, {});
 			// Get current ip address for google API calls
 			$.ajax({
 				url      : 'http://www.telize.com/jsonip',
@@ -472,9 +424,6 @@
 			zapi.loading_indicator_styles = '.spinner { display: none; position: absolute; left: 45%; width: 50px; height: 30px; text-align: center; font-size: 10px; } body.' + zapi.loading_class + ' .spinner { display: block; } .spinner > div { background-color: #333; height: 100%; width: 6px; margin: 0 1px; display: inline-block;  -webkit-animation: stretchdelay 1.2s infinite ease-in-out; animation: stretchdelay 1.2s infinite ease-in-out; } .spinner .rect2 { -webkit-animation-delay: -1.1s; animation-delay: -1.1s; } .spinner .rect3 { -webkit-animation-delay: -1.0s; animation-delay: -1.0s; } .spinner .rect4 { -webkit-animation-delay: -0.9s; animation-delay: -0.9s; } .spinner .rect5 { -webkit-animation-delay: -0.8s; animation-delay: -0.8s; } @-webkit-keyframes stretchdelay { 0%, 40%, 100% { -webkit-transform: scaleY(0.4) } 20% { -webkit-transform: scaleY(1.0) } } @keyframes stretchdelay { 0%, 40%, 100% { transform: scaleY(0.4); -webkit-transform: scaleY(0.4); } 20% {  transform: scaleY(1.0); -webkit-transform: scaleY(1.0); } }';
 			zapi.loading_indicator_html   = '<div class="spinner"><div class="rect1"></div><div class="rect2"></div><div class="rect3"></div><div class="rect4"></div><div class="rect5"></div></div>';
 			zapi.year_filter_html         = '<nav class="year-filter c-accordion"><div class="item"><span class="group"><h3>Archive <div class="arrow"></div></h3>' + zapi.loading_indicator_html + '</span></div></nav>';
-			// zapi.list_options             = {
-			//	item: '<div class="ref-entry"><h6 class="title"></h6><div class="citation"></div></div>'
-			// };
 		},
 		loadYearFilterList: function(evt) {
 			evt.stopPropagation();
@@ -589,4 +538,11 @@
 	// $.extend() merges 2nd object into first, modifying it, and returns the modified object
 	window.zotero_api = $.extend(zapi, window.zotero_api);
 
+	// Attach jquery.inview to parent if not yet attached
+	if ($.event.special.inview === undefined) {
+		js_plugin_src = window.location.href.split('/');
+		js_plugin_src.pop();
+		js_plugin_src.push('jquery.inview.min.js');
+		zapi.$parent_body.append('<script src="' + js_plugin_src.join('/') + '"><\/script>');
+	}
 })(window.jQuery || window.parent.jQuery);
