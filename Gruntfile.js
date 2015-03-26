@@ -11,7 +11,7 @@ module.exports = function (grunt) {
 			dist: {
 				src     : [
 					'bower_components/fuse.js/src/fuse.js',
-					'scientific-monitoring/src/str-to-date.js',
+					// 'scientific-monitoring/src/str-to-date.js',
 					'<%= copy.zapi.files[0].dest %>',
 				],
 				dest    : 'scientific-monitoring/zapi.js',
@@ -88,7 +88,7 @@ module.exports = function (grunt) {
 			zapi: {
 				files: [
 					'<%= copy.zapi.files[0].src %>',
-					'scientific-monitoring/src/str-to-date.js',
+					// 'scientific-monitoring/src/str-to-date.js',
 					'<%= cssmin.monitoring.src %>'
 				],
 				tasks: ['cssmin', 'copy', 'jshint:zapi', 'uglify:dist', 'clean']
