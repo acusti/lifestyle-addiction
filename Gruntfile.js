@@ -56,7 +56,7 @@ module.exports = function (grunt) {
 							// Get the contents of the minified CSS
 							monitoring_css = fs.readFileSync(grunt.config.get('cssmin.monitoring.dest')).toString(),
 							template_data = {
-								'monitoring_css': monitoring_css
+								'monitoring_css': monitoring_css.replace(/'/g, '\\\'')
 							};
 
 						// Run the file through grunt's template engine

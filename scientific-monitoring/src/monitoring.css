@@ -2,98 +2,100 @@
 	width: 24%;
 	min-width: 145px;
 	float: right;
-	margin: 0 0 0.5em 0.25em;
-	border: 1px solid rgb(229, 229, 229);
+	margin: 0 0 .5em .25em;
+	border: 1px solid #e5e5e5
 }
 .year-filter .item {
 	position: relative;
-	max-height: 64px;
-	padding: 0.5em 0.75em;
+	max-height: 40px;
+	padding: .5em .75em;
 	overflow: hidden;
 	cursor: pointer;
-	transition: max-height 0.35s;
+	-webkit-transition: max-height .35s;
+	transition: max-height .35s
 }
 .year-filter.active .item {
 	max-height: 450px;
 	overflow-y: auto;
-	cursor: default;
+	cursor: default
 }
 body.loading-references .year-filter.active .item {
 	max-height: 110px;
-	overflow: hidden;
+	overflow: hidden
 }
 .year-filter .spinner {
 	position: static;
-	margin: 1em auto;
+	margin: 1em auto
+}
+.c-accordion .arrow {
+	position: absolute;
+	top: 0;
+	right: 1px;
+	width: 20px;
+	height: 20px;
+	background: url('data:image/svg+xml;utf8,<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="216px" height="146px" viewBox="0 0 216 146" enable-background="new 0 0 216 146" xml:space="preserve"><path d="M168.452,42.121l-6.109-6.111c-2.118-2.009-4.59-3.014-7.413-3.014c-2.88,0-5.324,1.005-7.334,3.014L108,75.607 L68.404,36.011c-2.01-2.009-4.454-3.014-7.333-3.014c-2.824,0-5.296,1.005-7.414,3.014l-6.029,6.111 c-2.064,2.063-3.096,4.535-3.096,7.414c0,2.933,1.033,5.377,3.096,7.332l53.039,53.039c1.956,2.064,4.399,3.096,7.333,3.096 c2.879,0,5.35-1.032,7.413-3.096l53.039-53.039c2.01-2.01,3.016-4.454,3.016-7.332C171.468,46.711,170.462,44.24,168.452,42.121z"/></svg>') no-repeat center center;
+	background-size: 26px;
+	-webkit-transition: all .3s;
+	transition: all .3s
+}
+.c-accordion .open .arrow {
+	-webkit-transform: rotate(180deg);
+	-ms-transform: rotate(180deg);
+	transform: rotate(180deg)
 }
 .year-filter h3 {
 	position: relative;
-	cursor: pointer;
+	cursor: pointer
 }
 .year-filter h6 a {
 	display: block;
-	padding: 0.2em 1em;
+	padding: .2em 1em
 }
-.year-filter h6 a:hover,
-.quarter-filter.is-enabled:hover {
-	background: rgb(240, 240, 240);
-	cursor: pointer;
+.quarter-filter.is-enabled:hover, .year-filter h6 a:hover {
+	background: #f0f0f0;
+	cursor: pointer
 }
-.year-filter h6 a.active,
-.year-filter h6 a.active:hover,
-.quarter-filter.active,
-.quarter-filter.active:hover {
-	background: rgb(221, 221, 221);
+.quarter-filter.active, .quarter-filter.active:hover, .year-filter h6 a.active, .year-filter h6 a.active:hover {
+	background: #ddd
 }
 .quarters {
 	float: left;
 	margin-left: 9px;
 	margin-top: 20px;
-	/* Match the line height of the h2 */
-	line-height: 42px;
+	line-height: 42px
 }
-/* Year section styles */
 #boot .year-section h2 {
-	margin-top: 20px;
+	margin-top: 20px
 }
-#boot .year-section.first h2,
-#boot.filtered .year-section h2 {
-	margin-top: 0;
+#boot .year-section.first h2, #boot.filtered .year-section h2 {
+	margin-top: 0
 }
 #boot .year-section h6 {
-	margin-top: 1em;
+	margin-top: 1em
 }
-.year-section.first .quarters,
-.filtered .year-section .quarters {
-	margin-top: 0;
+.filtered .year-section .quarters, .year-section.first .quarters {
+	margin-top: 0
 }
 .quarter-filter {
-	border: 1px solid rgb(229, 229, 229);
-	font-weight: bold;
+	border: 1px solid #e5e5e5;
+	font-weight: 700;
 	font-size: 13px;
-	padding: 0.25em 0.35em;
-	margin: 0 0.25em;
-	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
-	filter: alpha(opacity=50);
-	opacity: 0.5;
+	padding: .25em .35em;
+	margin: 0 .25em;
+	opacity: .5
 }
 .quarter-filter.is-enabled {
-	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
-	filter: alpha(opacity=100);
-	opacity: 1;
-
+	opacity: 1
 }
 h2.quarterly {
-	float: left;
+	float: left
 }
 .ref-entry {
-	clear: left;
+	clear: left
 }
-/* Extra selector weight to override Concordia styles */
 #boot .year-filter h6 a:hover {
-	text-decoration: none;
+	text-decoration: none
 }
-/* Override unwanted Concordia styles */
 #boot .year-filter.active .item:hover {
-	background-color: transparent;
+	background-color: transparent
 }
