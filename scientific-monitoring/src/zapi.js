@@ -123,7 +123,7 @@
 			}
 
 			// If the spinner markup is not yet in the parent.window DOM, set it up and add styles
-			if (zapi.$footer.prev()[0].className !== 'spinner') {
+			if (!zapi.$footer.prev().length || zapi.$footer.prev()[0].className !== 'spinner') {
 				// First, our styles
 				$('head').append('<style>' + zapi.loading_indicator_styles + '</style>');
 				// And our markup
