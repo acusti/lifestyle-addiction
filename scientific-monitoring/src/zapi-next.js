@@ -155,6 +155,7 @@
 					len                = $entries.length,
 					i                  = 0,
 					ref_html           = '',
+					the_date           = '',
 					the_year           = '',
 					// year_class         = '',
 					year_title_class   = '',
@@ -203,7 +204,11 @@
 						search_text:   ''
 					};
 
-					the_year = $entry.find(zapi.namespace + 'year').text();
+					// Zotero provides date as zapi:parsedDate in form yyyy-mm-dd
+					// Other variations: yyyy-mm, yyyy
+					the_date = $entry.find(zapi.namespace + 'parsedDate').text().split('-');
+
+					the_year = the_date[0] || '';
 					is_new_year = zapi.years.length && zapi.years[zapi.years.length - 1] > the_year;
 					// Is it a new year section or the first of this group of references
 					if ((!i || is_new_year) && the_year) {
@@ -243,11 +248,7 @@
 					}
 					// Quarterly logic requires the date also
 					if (zapi.params.quarterly) {
-						the_month = zapi.strToDate(entry.date).month;
-						if (typeof the_month !== 'number') {
-							// If strToDate() failed to parse the date string, default to first month
-							the_month = 0;
-						}
+						the_month = the_date[1] || 0;
 						entry_class += ' year-' + the_year + ' quarter-' + Math.floor(the_month / 3);
 					}
 					// Entry wrap
